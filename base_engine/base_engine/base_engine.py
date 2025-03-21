@@ -7,9 +7,12 @@ from datetime import datetime
 import logging
 import time
 
+
 class BaseOptions(BaseModel):
     """Base scan options."""
+
     pass
+
 
 class Issue(BaseModel):
     severity: str = "info"
@@ -18,7 +21,7 @@ class Issue(BaseModel):
     title: str
     description: str = "No description provided."
     solution: str = "No solution available."
-    metadata: dict= Field(default_factory=dict)
+    metadata: dict = Field(default_factory=dict)
     type: str
     raw: Any = Field(default_factory=dict)
     timestamp: int = Field(default_factory=lambda: int(time.time()))
@@ -66,12 +69,14 @@ class Engine(ABC):
             issues_to_list = issues if isinstance(issues, list) else [issues]
 
             for issue in issues_to_list:
-                results.append({
-                    "result": dict(Issue.model_validate(issue)),
-                    "finished_at": datetime.now().timestamp(),
-                    "started_at": started_at,
-                    "engine": self.__class__.__name__,
-                })
+                results.append(
+                    {
+                        "result": dict(Issue.model_validate(issue)),
+                        "finished_at": datetime.now().timestamp(),
+                        "started_at": started_at,
+                        "engine": self.__class__.__name__,
+                    }
+                )
 
         return results
 

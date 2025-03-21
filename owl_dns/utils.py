@@ -31,11 +31,13 @@ def __is_domain(host):
         print(f"__is_domain({host}): failed: {e}")
     return res
 
+
 def get_whois(asset):
     if not (__is_domain(asset) or __is_ip_addr(asset)):
         return {}
 
     return _get_whois_domain(asset) if __is_domain(asset) else _get_whois_ip(asset)
+
 
 def _get_whois_domain(domain):
     try:
@@ -43,13 +45,13 @@ def _get_whois_domain(domain):
         if w.domain_name is None:
             return {"errors": w}
         return {
-                "raw": {"dict": w, "text": w.text},
-                "text": w.text,
-                "type": "domain",
-            }
-        
+            "raw": {"dict": w, "text": w.text},
+            "type": "domain",
+        }
+
     except Exception as e:
         return {domain: {"errors": str(e)}}
+
 
 def _get_whois_ip(ip):
     try:
@@ -59,9 +61,9 @@ def _get_whois_ip(ip):
         w_text = "see raw"
 
     return {
-            "raw": {"dict": w, "text": w_text},
-            "text": w_text,
-            "type": "ip",
+        "raw": {"dict": w, "text": w_text},
+        "text": w_text,
+        "type": "ip",
     }
 
 
@@ -74,13 +76,22 @@ def subdomain_enum(asset, resolve):
     res = {}
     try:
         res["subdomains_list"] = sublist3r.main(
-            asset, 1, None, ports=None, silent=True, verbose=True, enable_bruteforce=False, engines=None
+            asset,
+            1,
+            None,
+            ports=None,
+            silent=True,
+            verbose=True,
+            enable_bruteforce=False,
+            engines=None,
         )
     except Exception as e:
         return {"error": f"Sublist3r failed: {e}"}
 
     if resolve:
-        res["subdomains_resolve"] = {s: data for s in res["subdomains_list"] if (data := dns_resolve_asset(s))}
+        res["subdomains_resolve"] = {
+            s: data for s in res["subdomains_list"] if (data := dns_resolve_asset(s))
+        }
 
     return res
 
@@ -104,9 +115,7 @@ def dns_resolve_asset(
         except dns.resolver.NXDOMAIN:
             pass
         except Exception as e:
-            print(
-                f"DNS resolve raises an exception for asset '{asset}': {e}"
-            )
+            print(f"DNS resolve raises an exception for asset '{asset}': {e}")
         else:
             res.append(
                 {
@@ -118,6 +127,7 @@ def dns_resolve_asset(
                 }
             )
     return res
+
 
 def do_dns_transfer(asset: str):
     """Check if asset is vulnerable to DNS Zone Tranfer.
@@ -144,18 +154,14 @@ def do_dns_transfer(asset: str):
                 continue
 
         if zone_hosts:
-            return {
-                
-                    "hosts": list(zone_hosts),
-                    "response": ns_answer.response.to_text()
-                
-            }
+            return {"hosts": list(zone_hosts), "response": ns_answer.response.to_text()}
     except dns.resolver.NXDOMAIN:
         return f"Domain {asset} does not exist"
     except dns.exception.DNSException as e:
         return f"DNS error: {e}"
 
     return None
+
 
 def is_dns_recursive(ip: str) -> dict:
     """Check if a DNS server allows recursive queries by querying a random domain."""
@@ -172,6 +178,7 @@ def is_dns_recursive(ip: str) -> dict:
     except Exception:
         pass  # Failure to resolve implies secure configuration
     return None
+
 
 def do_dns_recursive(asset: str):
     """Check if the DNS server allows recursive queries.
@@ -195,6 +202,7 @@ def do_dns_recursive(asset: str):
 
     return dns_recursive_issues
 
+
 def find_seg_provider_for_mx_record(dns_value, seg_providers):
     """Find matching SEG provider based on MX record."""
     for seg_provider, seg_data in seg_providers.items():
@@ -203,27 +211,28 @@ def find_seg_provider_for_mx_record(dns_value, seg_providers):
                 return {seg_provider: seg_data}
     return None
 
+
 def do_seg_check(asset_value, seg_providers):
     """Check if Secure Email Gateway (SEG) is configured based on MX records."""
     dns_records = dns_resolve_asset(asset_value, "MX")
 
     if not dns_records:
-        return {'failed': "no MX records found"}
+        return {"failed": "no MX records found"}
 
     seg_dict = []
     for dns_record in dns_records:
         for dns_value in dns_record.get("values", []):
-            seg_provider_data = find_seg_provider_for_mx_record(dns_value, seg_providers)
+            seg_provider_data = find_seg_provider_for_mx_record(
+                dns_value, seg_providers
+            )
             if seg_provider_data:
                 seg_dict.append(seg_provider_data)
 
     if seg_dict:
-        return {
-            "seg_dict": seg_dict,
-            "seg_dict_dns_records": dns_records
-        }
+        return {"seg_dict": seg_dict, "seg_dict_dns_records": dns_records}
     else:
-        return {'no_seg': "MX records found but no Secure Email Gateway set"}
+        return {"no_seg": "MX records found but no Secure Email Gateway set"}
+
 
 # TODO
 def do_spf_check(asset_value: str):
@@ -251,11 +260,15 @@ def do_spf_check(asset_value: str):
             domain=asset_value
         )
     except RecursionError as error:
-        res["recursion_error"] = f"More than {sys.getrecursionlimit()} DNS lookups are required to validate SPF record."
+        res["recursion_error"] = (
+            f"More than {sys.getrecursionlimit()} DNS lookups are required to validate SPF record."
+        )
 
     else:
         if dns_lookup_count > dns_lookup_limit:
-            res["dns_lookup_limit"] = f"{dns_lookup_count} DNS lookups are required to validate SPF record."
+            res["dns_lookup_limit"] = (
+                f"{dns_lookup_count} DNS lookups are required to validate SPF record."
+            )
 
     return res
 
@@ -277,26 +290,23 @@ def do_dmarc_check(asset_value):
                         if num < 100:
                             dmarc_dict["dmarc_partial_coverage"] = "medium"
 
+    return {"dmarc_dict": dmarc_dict, "dmarc_dict_dns_records": dns_records}
 
-    return {
-        'dmarc_dict': dmarc_dict,
-        "dmarc_dict_dns_records": dns_records
-    }
 
 def do_dkim_check(asset_value):
     dkimlist = [
-    "s1",
-    "s2",
-    "selector1",
-    "selector2",
-    "everlytickey1",
-    "everlytickey2",
-    "eversrv",
-    "k1",
-    "mxvault",
-    "dkim",
-]
-    
+        "s1",
+        "s2",
+        "selector1",
+        "selector2",
+        "everlytickey1",
+        "everlytickey2",
+        "eversrv",
+        "k1",
+        "mxvault",
+        "dkim",
+    ]
+
     dkim_dict = {}
     found_dkim = False
     dkim_found_list = {}
@@ -313,11 +323,7 @@ def do_dkim_check(asset_value):
     else:
         dkim_dict["dkim"] = dkim_found_list
 
-
-    return {
-        'dkim_dict': dkim_dict,
-        "dkim_dict_dns_records": dns_records
-    }
+    return {"dkim_dict": dkim_dict, "dkim_dict_dns_records": dns_records}
 
 
 def get_lookup_count_and_spf_records(domain: str) -> tuple[int, list[tuple[str, str]]]:
@@ -363,10 +369,3 @@ def get_lookup_count_and_spf_records(domain: str) -> tuple[int, list[tuple[str, 
         spf_lookup_records.extend(domain_spf_lookup_records)
 
     return dns_lookup_count, spf_lookup_records
-
-
-
-
-
-
-

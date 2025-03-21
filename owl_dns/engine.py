@@ -3,22 +3,20 @@ from metadatas import Metadatas, Options
 import concurrent.futures
 import os
 import sys
-import time
 import utils
 import json
 from typing import Any, Generator
 import json
-import time
 import parsers
+
 
 class OwlDNS(Engine):
     def load_config(self, metadatas: Metadatas):
         sys.path.append(metadatas.sublist3r_bin_path)
-        
+
         with open(metadatas.seg_path) as seg_providers_file:
             self.seg_providers = json.loads(seg_providers_file.read())["seg"]
         # DnsTwist(engine.scanner["dnstwist_bin_path"])
-
 
     def start_scan(self, options: Options) -> Generator[dict | list[dict], Any, None]:
         # Useless to do these two checks
@@ -43,20 +41,33 @@ class OwlDNS(Engine):
 
                 # Subdomains
                 if options.do_subdomain_enum and asset.datatype == "domain":
-                    _submit_task(utils.subdomain_enum, asset, parsers.parse_subdomains(options.subdomain_as_new_asset), options.do_subdomains_resolve)
+                    _submit_task(
+                        utils.subdomain_enum,
+                        asset,
+                        parsers.parse_subdomains(options.subdomain_as_new_asset),
+                        options.do_subdomains_resolve,
+                    )
                 if options.do_subdomains_bruteforce and asset.datatype == "domain":
                     pass
                 # DNS Checks
                 if options.do_dns_resolve and asset.datatype == "domain":
-                    _submit_task(utils.dns_resolve_asset, asset, parsers.parse_dns_resolve)
+                    _submit_task(
+                        utils.dns_resolve_asset, asset, parsers.parse_dns_resolve
+                    )
                 if options.do_dns_transfer and asset.datatype == "domain":
-                    _submit_task(utils.do_dns_transfer, asset, parsers.parse_dns_transfer)
+                    _submit_task(
+                        utils.do_dns_transfer, asset, parsers.parse_dns_transfer
+                    )
                 if options.do_dns_recursive and asset.datatype == "domain":
-                    _submit_task(utils.do_dns_recursive, asset, parsers.parse_dns_recursive)
+                    _submit_task(
+                        utils.do_dns_recursive, asset, parsers.parse_dns_recursive
+                    )
 
                 # Seg check
                 if options.do_seg_check and asset.datatype in ["domain", "fqdn"]:
-                    _submit_task(utils.do_seg_check, asset, parsers.parse_seg, self.seg_providers)
+                    _submit_task(
+                        utils.do_seg_check, asset, parsers.parse_seg, self.seg_providers
+                    )
 
                 # SPF check TODO
                 if options.do_spf_check and asset.datatype == "domain":
@@ -70,17 +81,17 @@ class OwlDNS(Engine):
                 if options.do_dmarc_check and asset.datatype == "domain":
                     _submit_task(utils.do_dmarc_check, asset, parsers.parse_dmarc)
 
+            self.logger.debug(f"Number of tasks to process: {len(future_to_asset)}")
             # Get tasks results
             for future in concurrent.futures.as_completed(future_to_asset):
                 asset_value, parser = future_to_asset[future]
                 try:
                     result = future.result()
+                    print(parser)
+                    print(result)
                     yield parser(asset_value, result)
                 except Exception as e:
-                    self.logger.error(f"Error: {e}")
-
-            
-
+                    self.logger.error(f"Error during parsing", e)
 
 
 engine = OwlDNS(Options, Metadatas)

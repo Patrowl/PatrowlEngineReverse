@@ -37,13 +37,17 @@ def parse_whois(asset, result):
         }
 
     else:
-        whois_hash = hashlib.sha1(str(result["text"]).encode("utf-8")).hexdigest()[:6]
+        whois_hash = hashlib.sha1(
+            str(result["raw"]["text"]).encode("utf-8")
+        ).hexdigest()[:6]
         return {
             "severity": "info",
             "confidence": "certain",
             "target": {"addr": [asset], "protocol": "domain"},
             "title": "Whois info for '{}' (HASH: {})".format(asset, whois_hash),
-            "description": "Whois Info (raw): \n\n{}".format(str(result["text"])),
+            "description": "Whois Info (raw): \n\n{}".format(
+                str(result["raw"]["text"])
+            ),
             "solution": "n/a",
             "metadata": {"tags": ["whois", result["type"]]},
             "type": f"whois_{result['type']}_fullinfo",
@@ -238,27 +242,25 @@ def parse_seg(asset, result):
             "raw": seg_check_failed,
         }
 
+
 def parse_dkim(asset, result):
     dkim_check = result["dkim_dict"]
     dkim_check_dns_records = result["dkim_dict_dns_records"]
-    dkim_hash = hashlib.sha1(
-        str(dkim_check_dns_records).encode("utf-8")
-    ).hexdigest()[:6]
-    return (
-        {
-            "severity": "info",
-            "confidence": "certain",
-            "target": {"addr": [asset], "protocol": "domain"},
-            "title": "DKIM check for '{}' (HASH: {})".format(asset, dkim_hash),
-            "description": "DKIM check for '{}':\n\n{}".format(
-                asset, str(dkim_check)
-            ),
-            "solution": "n/a",
-            "metadata": {"tags": ["domains", "dkim"]},
-            "type": "dkim_check",
-            "raw": result["dkim_dict"],
-        }
-    )
+    dkim_hash = hashlib.sha1(str(dkim_check_dns_records).encode("utf-8")).hexdigest()[
+        :6
+    ]
+    return {
+        "severity": "info",
+        "confidence": "certain",
+        "target": {"addr": [asset], "protocol": "domain"},
+        "title": "DKIM check for '{}' (HASH: {})".format(asset, dkim_hash),
+        "description": "DKIM check for '{}':\n\n{}".format(asset, str(dkim_check)),
+        "solution": "n/a",
+        "metadata": {"tags": ["domains", "dkim"]},
+        "type": "dkim_check",
+        "raw": result["dkim_dict"],
+    }
+
 
 def parse_dmarc(asset, result):
     dmarc_check = result["dmarc_dict"]
@@ -266,19 +268,18 @@ def parse_dmarc(asset, result):
     for c in dmarc_check:
         h = str(c) + str(dmarc_check_dns_records)
         dmarc_hash = hashlib.sha1(h.encode("utf-8")).hexdigest()[:6]
-        return (
-            {
-                "severity": dmarc_check[c],
-                "confidence": "certain",
-                "target": {"addr": [asset], "protocol": "domain"},
-                "title": "DMARC for '{}' (HASH: {})".format(asset, dmarc_hash),
-                "description": "{}\n".format(c),
-                "solution": "n/a",
-                "metadata": {"tags": ["domains", "dmarc"]},
-                "type": "dmarc_check",
-                "raw": result["dmarc_dict"],
-            }
-        )
+        return {
+            "severity": dmarc_check[c],
+            "confidence": "certain",
+            "target": {"addr": [asset], "protocol": "domain"},
+            "title": "DMARC for '{}' (HASH: {})".format(asset, dmarc_hash),
+            "description": "{}\n".format(c),
+            "solution": "n/a",
+            "metadata": {"tags": ["domains", "dmarc"]},
+            "type": "dmarc_check",
+            "raw": result["dmarc_dict"],
+        }
+
 
 def parse_dns_transfer(asset, result):
     issue = dict(DNS_ZONE_TRANSFER)
@@ -327,8 +328,8 @@ def parse_dns_recursive(asset, result):
 def parse_spf(asset, result):
     # print(asset, result)
     issues = []
-    issues_from_spf_check = result['issues']
-    parsed_spf_record = result['parsed_spf_record']
+    issues_from_spf_check = result["issues"]
+    parsed_spf_record = result["parsed_spf_record"]
 
     for spf_issue in issues_from_spf_check:
         description = spf_issue.get("description")
@@ -359,230 +360,238 @@ def parse_spf(asset, result):
     return issues
 
 
-
 def parse_advanced_whois(asset, result):
 
     issues = [parse_whois(asset, result)]
-    
+
     if "errors" in result.keys():
         return issues
 
     def _create_whois_issue(info):
         return {
-        "severity": "info",
-        "confidence": "certain",
-        "target": {"addr": [asset], "protocol": "domain"},
-        "solution": "n/a",
-        "metadata": {"tags": ["whois"]},
+            "severity": "info",
+            "confidence": "certain",
+            "target": {"addr": [asset], "protocol": "domain"},
+            "solution": "n/a",
+            "metadata": {"tags": ["whois"]},
             **info,
-    }
+        }
+
     # status
-    whois_statuses = ",\n".join(
-        result["raw"]["dict"]["status"]
+    whois_statuses = ",\n".join(result["raw"]["dict"]["status"])
+    issues.append(
+        _create_whois_issue(
+            {
+                "type": "whois_domain_status",
+                "title": "[Whois] '{}' domain has status '{}'".format(
+                    asset, result["raw"]["dict"]["status"][0]
+                ),
+                "description": "[Whois] '{}' domain has status '{}'".format(
+                    asset, whois_statuses
+                ),
+                "raw": result["raw"]["dict"]["status"],
+            }
+        )
     )
-    issues.append(_create_whois_issue({
-            "type": "whois_domain_status",
-            "title": "[Whois] '{}' domain has status '{}'".format(
-                asset, result["raw"]["dict"]["status"][0]
-            ),
-            "description": "[Whois] '{}' domain has status '{}'".format(
-                asset, whois_statuses
-            ),
-            "raw": result["raw"]["dict"]["status"],
-        }))
 
     # registrar
-    whois_reginfo = "Name: {}\n".format(
-        result["raw"]["dict"]["registrar"]
-    )
-    whois_reginfo += "ID: {}\n".format(
-        result["raw"]["dict"].get("registrar_id", "")
-    )
+    whois_reginfo = "Name: {}\n".format(result["raw"]["dict"]["registrar"])
+    whois_reginfo += "ID: {}\n".format(result["raw"]["dict"].get("registrar_id", ""))
     whois_reginfo += "URL(s): {}\n".format(
         ", ".join(result["raw"]["dict"].get("registrar_url", ""))
     )
 
-    issues.append(_create_whois_issue({
-            "type": "whois_registrar",
-            "title": "[Whois] '{}' domain registrar is '{}'".format(
-                asset, result["raw"]["dict"]["registrar"]
-            ),
-            "description": "[Whois] '{}' domain registrar is '{}': \n{}".format(
-                asset,
-                result["raw"]["dict"]["registrar"],
-                whois_reginfo,
-            ),
-            "raw": result["raw"]["dict"]["registrar"],
-        }))
+    issues.append(
+        _create_whois_issue(
+            {
+                "type": "whois_registrar",
+                "title": "[Whois] '{}' domain registrar is '{}'".format(
+                    asset, result["raw"]["dict"]["registrar"]
+                ),
+                "description": "[Whois] '{}' domain registrar is '{}': \n{}".format(
+                    asset,
+                    result["raw"]["dict"]["registrar"],
+                    whois_reginfo,
+                ),
+                "raw": result["raw"]["dict"]["registrar"],
+            }
+        )
+    )
 
     # emails
-    if (
-        "emails" in result["raw"]["dict"].keys()
-        and result["raw"]["dict"]["emails"]
-    ):
-        issues.append(_create_whois_issue({
-                "type": "whois_emails",
-                "title": "[Whois] '{}' domain contact emails are set.".format(
-                    asset
-                ),
-                "description": "[Whois] '{}' domain contact emails are:\n'{}'".format(
-                    asset,
-                    ", ".join(
-                        result["raw"]["dict"]["emails"]
+    if "emails" in result["raw"]["dict"].keys() and result["raw"]["dict"]["emails"]:
+        issues.append(
+            _create_whois_issue(
+                {
+                    "type": "whois_emails",
+                    "title": "[Whois] '{}' domain contact emails are set.".format(
+                        asset
                     ),
-                ),
-                "raw": result["raw"]["dict"]["emails"],
-            }))
+                    "description": "[Whois] '{}' domain contact emails are:\n'{}'".format(
+                        asset,
+                        ", ".join(result["raw"]["dict"]["emails"]),
+                    ),
+                    "raw": result["raw"]["dict"]["emails"],
+                }
+            )
+        )
 
     # nameservers
-    issues.append(_create_whois_issue({
-            "type": "whois_nameservers",
-            "title": "[Whois] '{}' domain nameservers are set.".format(
-                asset
-            ),
-            "description": "[Whois] '{}' domain nameservers are:\n{}".format(
-                asset,
-                ",\n".join(
-                    result["raw"]["dict"]["name_servers"]
+    issues.append(
+        _create_whois_issue(
+            {
+                "type": "whois_nameservers",
+                "title": "[Whois] '{}' domain nameservers are set.".format(asset),
+                "description": "[Whois] '{}' domain nameservers are:\n{}".format(
+                    asset,
+                    ",\n".join(result["raw"]["dict"]["name_servers"]),
                 ),
-            ),
-            "raw": result["raw"]["dict"]["name_servers"],
-        }))
+                "raw": result["raw"]["dict"]["name_servers"],
+            }
+        )
+    )
     updated_date = result["raw"]["dict"]["updated_date"]
-    update_dates = [updated_date] if not isinstance(updated_date, list) else updated_date
+    update_dates = (
+        [updated_date] if not isinstance(updated_date, list) else updated_date
+    )
     # updated_date
 
-    issues.append(_create_whois_issue({
-            "type": "whois_update_dates",
-            "title": "[Whois] '{}' domain was lastly updated the '{}'".format(
-                asset,
-                max(update_dates)
-                .date()
-                .isoformat(),
-            ),
-            "description": "[Whois] '{}' domain was updated at the following dates: \n\n{}".format(
-                asset, ", ".join(str(v) for v in update_dates)
-            ),
-            "raw": result["raw"]["dict"]["updated_date"],
-        }))
+    issues.append(
+        _create_whois_issue(
+            {
+                "type": "whois_update_dates",
+                "title": "[Whois] '{}' domain was lastly updated the '{}'".format(
+                    asset,
+                    max(update_dates).date().isoformat(),
+                ),
+                "description": "[Whois] '{}' domain was updated at the following dates: \n\n{}".format(
+                    asset, ", ".join(str(v) for v in update_dates)
+                ),
+                "raw": result["raw"]["dict"]["updated_date"],
+            }
+        )
+    )
 
     # creation_date
-    issues.append(_create_whois_issue({
-            "type": "whois_creation_dates",
-            "title": "[Whois] '{}' domain was lastly created the '{}'".format(
-                asset,
-                (result["raw"]["dict"]["creation_date"])
-                .date()
-                .isoformat(),
-            ),
-            "description": "[Whois] '{}' domain was created at the following dates: \n\n{}".format(
-                asset,
-                (result["raw"]["dict"]["creation_date"])
-            ),
-            "raw": result["raw"]["dict"]["creation_date"],
-        }))
+    issues.append(
+        _create_whois_issue(
+            {
+                "type": "whois_creation_dates",
+                "title": "[Whois] '{}' domain was lastly created the '{}'".format(
+                    asset,
+                    (result["raw"]["dict"]["creation_date"]).date().isoformat(),
+                ),
+                "description": "[Whois] '{}' domain was created at the following dates: \n\n{}".format(
+                    asset, (result["raw"]["dict"]["creation_date"])
+                ),
+                "raw": result["raw"]["dict"]["creation_date"],
+            }
+        )
+    )
 
     # expiry date
-    issues.append(_create_whois_issue({
-            "type": "whois_expiration_dates",
-            "title": "[Whois] '{}' domain is registred until '{}'".format(
-                asset,
-                result["raw"]["dict"]["expiration_date"]
-                .date()
-                .isoformat(),
-            ),
-            "description": "[Whois] '{}' domain is registred until '{}'".format(
-                asset,
-                result["raw"]["dict"]["expiration_date"]
-                .date()
-                .isoformat(),
-            ),
-            "raw": result["raw"]["dict"][
-                "expiration_date"
-            ],
-        }))
+    issues.append(
+        _create_whois_issue(
+            {
+                "type": "whois_expiration_dates",
+                "title": "[Whois] '{}' domain is registred until '{}'".format(
+                    asset,
+                    result["raw"]["dict"]["expiration_date"].date().isoformat(),
+                ),
+                "description": "[Whois] '{}' domain is registred until '{}'".format(
+                    asset,
+                    result["raw"]["dict"]["expiration_date"].date().isoformat(),
+                ),
+                "raw": result["raw"]["dict"]["expiration_date"],
+            }
+        )
+    )
 
     # Raise alarms at 6 months (low), 3 months (medium), 2 weeks (high) or when expired (high)
     exp_date = result["raw"]["dict"]["expiration_date"]
-    six_month_later = datetime.datetime.now() + datetime.timedelta(
-        days=365 / 2
-    )
-    three_month_later = datetime.datetime.now() + datetime.timedelta(
-        days=90
-    )
+    six_month_later = datetime.datetime.now() + datetime.timedelta(days=365 / 2)
+    three_month_later = datetime.datetime.now() + datetime.timedelta(days=90)
     two_weeks_later = datetime.datetime.now() + datetime.timedelta(days=15)
 
     if exp_date < datetime.datetime.now():
-        issues.append(_create_whois_issue({
-                "severity": "high",
-                "type": "whois_expiration_dates",
-                "title": "[Whois] '{}' domain is expired since '{}'".format(
-                    asset, exp_date.date().isoformat()
-                ),
-                "description": "[Whois] '{}' domain is expired since '{}' (less than 2 weeks)\n\nAll dates in record: {}".format(
-                    asset,
-                    exp_date.date().isoformat(),
-                    ", ".join(exp_date.date().isoformat()),
-                ),
-                "raw": result["raw"]["dict"][
-                    "expiration_date"
-                ],
-                "solution": "Renew the domain",
-            }))
+        issues.append(
+            _create_whois_issue(
+                {
+                    "severity": "high",
+                    "type": "whois_expiration_dates",
+                    "title": "[Whois] '{}' domain is expired since '{}'".format(
+                        asset, exp_date.date().isoformat()
+                    ),
+                    "description": "[Whois] '{}' domain is expired since '{}' (less than 2 weeks)\n\nAll dates in record: {}".format(
+                        asset,
+                        exp_date.date().isoformat(),
+                        ", ".join(exp_date.date().isoformat()),
+                    ),
+                    "raw": result["raw"]["dict"]["expiration_date"],
+                    "solution": "Renew the domain",
+                }
+            )
+        )
     elif exp_date < two_weeks_later:
-        issues.append(_create_whois_issue({
-                "issue_id": len(issues) + 1,
-                "severity": "high",
-                "type": "whois_expiration_dates",
-                "title": "[Whois] '{}' domain is registred until '{}' (less than 2 weeks)".format(
-                    asset, exp_date.date().isoformat()
-                ),
-                "description": "[Whois] '{}' domain is registred until '{}' (less than 2 weeks)\n\nAll dates in record: {}".format(
-                    asset,
-                    exp_date.date().isoformat(),
-                    ", ".join(exp_date.date().isoformat()),
-                ),
-                "raw": result["raw"]["dict"][
-                    "expiration_date"
-                ],
-                "solution": "Renew the domain",
-            }))
+        issues.append(
+            _create_whois_issue(
+                {
+                    "issue_id": len(issues) + 1,
+                    "severity": "high",
+                    "type": "whois_expiration_dates",
+                    "title": "[Whois] '{}' domain is registred until '{}' (less than 2 weeks)".format(
+                        asset, exp_date.date().isoformat()
+                    ),
+                    "description": "[Whois] '{}' domain is registred until '{}' (less than 2 weeks)\n\nAll dates in record: {}".format(
+                        asset,
+                        exp_date.date().isoformat(),
+                        ", ".join(exp_date.date().isoformat()),
+                    ),
+                    "raw": result["raw"]["dict"]["expiration_date"],
+                    "solution": "Renew the domain",
+                }
+            )
+        )
     elif exp_date < three_month_later:
-        issues.append(_create_whois_issue({
-                "issue_id": len(issues) + 1,
-                "severity": "medium",
-                "type": "whois_expiration_dates",
-                "title": "[Whois] '{}' domain is registred until '{}' (less than 3 months)".format(
-                    asset, exp_date.date().isoformat()
-                ),
-                "description": "[Whois] '{}' domain is registred until '{}' (less than 3 months)\n\nAll dates in record: {}".format(
-                    asset,
-                    exp_date.date().isoformat(),
-                    ", ".join(exp_date.date().isoformat()),
-                ),
-                "raw": result["raw"]["dict"][
-                    "expiration_date"
-                ],
-                "solution": "Renew the domain",
-            }))
+        issues.append(
+            _create_whois_issue(
+                {
+                    "issue_id": len(issues) + 1,
+                    "severity": "medium",
+                    "type": "whois_expiration_dates",
+                    "title": "[Whois] '{}' domain is registred until '{}' (less than 3 months)".format(
+                        asset, exp_date.date().isoformat()
+                    ),
+                    "description": "[Whois] '{}' domain is registred until '{}' (less than 3 months)\n\nAll dates in record: {}".format(
+                        asset,
+                        exp_date.date().isoformat(),
+                        ", ".join(exp_date.date().isoformat()),
+                    ),
+                    "raw": result["raw"]["dict"]["expiration_date"],
+                    "solution": "Renew the domain",
+                }
+            )
+        )
     elif exp_date < six_month_later:
-        issues.append(_create_whois_issue({
-                "issue_id": len(issues) + 1,
-                "severity": "low",
-                "type": "whois_expiration_dates",
-                "title": "[Whois] '{}' domain is registred until '{}' (less than 6 months)".format(
-                    asset, exp_date.date().isoformat()
-                ),
-                "description": "[Whois] '{}' domain is registred until '{}' (less than 6 months)\n\nAll dates in record: {}".format(
-                    asset,
-                    exp_date.date().isoformat(),
-                    ", ".join(exp_date.date().isoformat()),
-                ),
-                "raw": result["raw"]["dict"][
-                    "expiration_date"
-                ],
-                "solution": "Renew the domain",
-            }))
+        issues.append(
+            _create_whois_issue(
+                {
+                    "issue_id": len(issues) + 1,
+                    "severity": "low",
+                    "type": "whois_expiration_dates",
+                    "title": "[Whois] '{}' domain is registred until '{}' (less than 6 months)".format(
+                        asset, exp_date.date().isoformat()
+                    ),
+                    "description": "[Whois] '{}' domain is registred until '{}' (less than 6 months)\n\nAll dates in record: {}".format(
+                        asset,
+                        exp_date.date().isoformat(),
+                        ", ".join(exp_date.date().isoformat()),
+                    ),
+                    "raw": result["raw"]["dict"]["expiration_date"],
+                    "solution": "Renew the domain",
+                }
+            )
+        )
     return issues
 
 
@@ -734,4 +743,3 @@ def _parse_spf_record(dns_records: list[str]) -> tuple[list, list]:
         issues.append(spf_issues.SPF_RECORD_SET)
 
     return parsed_spf_record, issues
-
