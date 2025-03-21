@@ -1,0 +1,13 @@
+../base_engine
+dnslib==0.9.23
+dnspython==2.0.0
+Flask==2.2.3
+gunicorn==20.1.0
+ipwhois==1.2.0
+netaddr==0.8.0
+psutil==5.9.8
+python-whois==0.8.0
+requests==2.28.1
+urllib3==1.26.18
+validators==0.20.0
+Werkzeug==2.2.3
