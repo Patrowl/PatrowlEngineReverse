@@ -58,7 +58,6 @@ def _get_whois_ip(ip):
     try:
         w = IPWhois(ip.strip()).lookup_rdap()
         w_text = json.dumps(w, sort_keys=True) if w else "see raw"
-        print(w_text)
     except Exception as e:
         w_text = "see raw"
 
@@ -109,6 +108,7 @@ def dns_resolve_asset(
     for record_type in record_types:
         try:
             answers = resolver.query(asset, record_type)
+
         except dns.resolver.NoAnswer:
             pass
         except dns.resolver.Timeout:

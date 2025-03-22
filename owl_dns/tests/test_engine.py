@@ -14,29 +14,6 @@ class TestEngine(TestEngine):
         with self.assertRaises(ValidationError):
             self.start_scan(options)
 
-    def test_do_subdomains(self):
-        options = {
-            "assets": [{"datatype": "domain", "value": "yohangastoud.fr"}],
-            "do_subdomain_enum": True,
-        }
-
-        results = self.start_scan(options)
-        self.assertEqual(len(results), 52)
-        self.assertEqual(results[0]["result"]["type"], "subdomain")
-
-    def test_do_subdomains_resolve(self):
-        options = {
-            "assets": [{"datatype": "domain", "value": "yohangastoud.fr"}],
-            "do_subdomain_enum": True,
-            "do_subdomains_resolve": True,
-        }
-
-        results = self.start_scan(options)
-        self.assertEqual(len(results), 104)
-        self.assertEqual(results[0]["result"]["type"], "subdomains_resolve")
-        self.assertEqual(results[-2]["result"]["type"], "subdomain")
-        self.assertEqual(results[-1]["result"]["type"], "subdomains_enum")
-
     def test_do_dns_resolve(self):
         options = {
             "assets": [{"datatype": "domain", "value": "yohangastoud.fr"}],

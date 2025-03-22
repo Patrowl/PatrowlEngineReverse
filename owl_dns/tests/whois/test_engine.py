@@ -2,7 +2,7 @@ import unittest
 import unittest.mock
 
 from base_engine.test_case import TestEngine
-from owl_dns.tests.whois import mock_data
+from tests.whois import mock_data
 
 
 class TestEngine(TestEngine):

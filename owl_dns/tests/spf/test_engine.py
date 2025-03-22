@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock
 
-from owl_dns.tests.spf import mock_data
+from tests.spf import mock_data
 from base_engine.test_case import TestEngine
 
 

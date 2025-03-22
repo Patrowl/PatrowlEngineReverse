@@ -34,11 +34,16 @@ class Engine(ABC):
         self,
         scan_option: type[BaseModel] = BaseOptions,
         metadatas: type[BaseModel] = BaseModel,
+        metadata_path="metadatas.json",
     ):
         self.queue_key = f"queue:{self.__class__.__name__}"
         self.processing_key = f"processing:{self.__class__.__name__}"
         self.scan_options = scan_option
         self.metadatas = metadatas
+
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            metadatas = json.load(f)
+            self._validate_and_load_config(metadatas)
 
     def start(self):
         self.redis_client = redis.Redis(
@@ -89,10 +94,6 @@ class Engine(ABC):
     def _process_task(self, value: str):
         """Processes a task from Redis queue."""
         try:
-            with open("metadatas.json", "r", encoding="utf-8") as f:
-                metadatas = json.load(f)
-                self._validate_and_load_config(metadatas)
-
             task_data = json.loads(value)
             self.redis_client.rpush(self.processing_key, value)
 
