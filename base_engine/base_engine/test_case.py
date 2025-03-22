@@ -1,7 +1,8 @@
 import unittest
 import json
 
-from engine import engine
+from engine import engine  # type: ignore
+
 
 class TestEngine(unittest.TestCase):
     def setUp(self):

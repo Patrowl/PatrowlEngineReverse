@@ -1,5 +1,8 @@
 {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnPaste": false,
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "python.analysis.extraPaths": [
+        "./base_engine"
+    ]
 }
