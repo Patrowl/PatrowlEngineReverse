@@ -87,8 +87,6 @@ class OwlDNS(Engine):
                 asset_value, parser = future_to_asset[future]
                 try:
                     result = future.result()
-                    print(parser)
-                    print(result)
                     yield parser(asset_value, result)
                 except Exception as e:
                     self.logger.error(f"Error during parsing", e)

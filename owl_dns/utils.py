@@ -58,12 +58,12 @@ def _get_whois_ip(ip):
     try:
         w = IPWhois(ip.strip()).lookup_rdap()
         w_text = json.dumps(w, sort_keys=True) if w else "see raw"
-    except Exception:
+        print(w_text)
+    except Exception as e:
         w_text = "see raw"
 
     return {
         "raw": {"dict": w, "text": w_text},
-        "text": w_text,
         "type": "ip",
     }
 
@@ -116,7 +116,7 @@ def dns_resolve_asset(
         except dns.resolver.NXDOMAIN:
             pass
         except Exception as e:
-            print(f"DNS resolve raises an exception for asset '{asset}': {e}")
+            print(f"DNS resolve raises an exception for asset '{asset}': {e}", e)
         else:
             res.append(
                 {

@@ -12,7 +12,7 @@ class TestEngine(TestEngine):
         options = {}
 
         with self.assertRaises(ValidationError):
-            self.engine.test_scan(options, self.metadatas)
+            self.start_scan(options)
 
     def test_do_subdomains(self):
         options = {
@@ -20,7 +20,7 @@ class TestEngine(TestEngine):
             "do_subdomain_enum": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 52)
         self.assertEqual(results[0]["result"]["type"], "subdomain")
 
@@ -31,7 +31,7 @@ class TestEngine(TestEngine):
             "do_subdomains_resolve": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 104)
         self.assertEqual(results[0]["result"]["type"], "subdomains_resolve")
         self.assertEqual(results[-2]["result"]["type"], "subdomain")
@@ -43,7 +43,7 @@ class TestEngine(TestEngine):
             "do_dns_resolve": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
 
         self.assertEqual(results[0]["result"]["type"], "dns_resolve")
@@ -58,7 +58,7 @@ class TestEngine(TestEngine):
             "do_dns_transfer": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
 
         self.assertEqual(results[0]["result"]["type"], "dns_transfer")
@@ -73,7 +73,7 @@ class TestEngine(TestEngine):
             "do_dns_recursive": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 0)
         # self.assertEqual(len(results), 1)
         # self.assertEqual(results[0]['result']['type'], "dns_recursive")
@@ -87,7 +87,7 @@ class TestEngine(TestEngine):
             "do_seg_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["result"]["type"], "seg_check")
         self.assertEqual(results[0]["result"]["title"], "No Secure Email Gateway found")
@@ -100,7 +100,7 @@ class TestEngine(TestEngine):
             "do_seg_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["result"]["type"], "seg_check")
         self.assertEqual(
@@ -116,7 +116,7 @@ class TestEngine(TestEngine):
             "do_dkim_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["result"]["type"], "dkim_check")
         self.assertEqual(
@@ -132,7 +132,7 @@ class TestEngine(TestEngine):
             "do_dmarc_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["result"]["type"], "dmarc_check")
         self.assertEqual(

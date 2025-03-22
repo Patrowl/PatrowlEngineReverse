@@ -19,12 +19,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.spf"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(results[0]["result"]["title"], "SPF record is set")
@@ -36,12 +36,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.no_spf"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(results[0]["result"]["title"], "No SPF record")
@@ -60,12 +60,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.miss"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 3)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(results[0]["result"]["title"], "Miss SPF record termination")
@@ -84,12 +84,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.permissive"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 3)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(results[0]["result"]["title"], "Permissive SPF record")
@@ -101,22 +101,20 @@ class TestEngine(TestEngine):
             [
                 '"v=spf1 nclude:spf.protection.outlook.com ip4:195.16.132.104 ip4:195.16.140.232 -all"'
             ],
-            [
-                '"v=spf1 nclude:spf.protection.outlook.com ip4:195.16.132.104 ip4:195.16.140.232 -all"'
-            ],
         ]
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.malformed"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
-        self.assertEqual(len(results), 3)
+        results = self.start_scan(options)
+        self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(results[0]["result"]["title"], "Malformed SPF record")
+        self.assertEqual(results[0]["result"]["raw"]["extra_info"], "'nclude' is an illegal term.")
 
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_multiple(self, mock_resolve):
@@ -153,12 +151,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.multiple"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(results[0]["result"]["title"], "Multiple SPF records")
@@ -204,12 +202,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.deprecated"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 2)
         self.assertEqual(results[1]["result"]["type"], "spf_check")
         self.assertEqual(results[1]["result"]["title"], "Deprecated SPF record")
@@ -223,12 +221,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.high"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 3)
         self.assertEqual(results[2]["result"]["type"], "spf_check")
         self.assertEqual(results[2]["result"]["title"], "High number of DNS lookup")
@@ -271,12 +269,12 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "dummy"},
+                {"datatype": "domain", "value": "dummy.directive"},
             ],
             "do_spf_check": True,
         }
 
-        results = self.engine.test_scan(options, self.metadatas)
+        results = self.start_scan(options)
         self.assertEqual(len(results), 3)
         self.assertEqual(results[0]["result"]["type"], "spf_check")
         self.assertEqual(
