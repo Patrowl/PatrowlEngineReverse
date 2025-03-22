@@ -2,14 +2,14 @@ import unittest
 import unittest.mock
 
 from base_engine.test_case import TestEngine
-from tests.whois import mock_data
+from tests.mock import whois
 
 
 class TestEngine(TestEngine):
 
     @unittest.mock.patch("whois.whois")
     def test_do_whois(self, mock_whois):
-        mock_whois.return_value = mock_data.get_dummy_whois()
+        mock_whois.return_value = whois.get_dummy_whois()
 
         options = {
             "assets": [
@@ -47,7 +47,7 @@ class TestEngine(TestEngine):
 
     @unittest.mock.patch("whois.whois")
     def test_do_advanced_whois(self, mock_whois):
-        mock_whois.return_value = mock_data.get_dummy_whois()
+        mock_whois.return_value = whois.get_dummy_whois()
 
         options = {
             "assets": [{"datatype": "domain", "value": "dummy.whois"}],

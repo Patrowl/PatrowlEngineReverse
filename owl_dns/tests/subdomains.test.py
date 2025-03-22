@@ -2,7 +2,6 @@ import unittest
 import unittest.mock
 
 from base_engine.test_case import TestEngine
-from tests.subdomains import mock_data
 
 __import__("sublist3r")
 
@@ -30,7 +29,6 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("sublist3r.main")
     def test_do_subdomains_resolve(self, mock_sublist3r, mock_resolve):
         mock_sublist3r.return_value = ["sub.dummy.fr"]
-
         mock_resolve.return_value = ["1.2.3.4"]
 
         options = {
@@ -49,7 +47,6 @@ class TestEngine(TestEngine):
         self, mock_sublist3r, mock_resolve
     ):
         mock_sublist3r.return_value = ["sub.dummy.fr"]
-
         mock_resolve.return_value = ["1.2.3.4"]
 
         options = {

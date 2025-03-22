@@ -108,7 +108,7 @@ def dns_resolve_asset(
     for record_type in record_types:
         try:
             answers = resolver.query(asset, record_type)
-
+            # print([str(rdata) for rdata in answers])
         except dns.resolver.NoAnswer:
             pass
         except dns.resolver.Timeout:
@@ -116,7 +116,7 @@ def dns_resolve_asset(
         except dns.resolver.NXDOMAIN:
             pass
         except Exception as e:
-            print(f"DNS resolve raises an exception for asset '{asset}': {e}", e)
+            print(f"DNS resolve raises an exception for asset '{asset}'", e)
         else:
             res.append(
                 {
@@ -188,10 +188,9 @@ def do_dns_recursive(asset: str):
     misconfigured.
     """
     dns_recursive_issues = None
-
     try:
         # Resolve the A record for the asset (domain)
-        ip_answer = dns.resolver.resolve(asset, "A")
+        ip_answer = dns.resolver.resolve(asset)
     except Exception:
         return dns_recursive_issues
 
@@ -199,7 +198,7 @@ def do_dns_recursive(asset: str):
     for ip in ip_answer:
         dns_recursive_issues = is_dns_recursive(str(ip))
         if dns_recursive_issues:
-            break
+            return dns_recursive_issues
 
     return dns_recursive_issues
 

@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock
 
-from tests.spf import mock_data
+from tests.mock import spf
 from base_engine.test_case import TestEngine
 
 
@@ -10,7 +10,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_spf(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_FOUND
+        mock_resolve.side_effect = spf.SPF_FOUND
 
         options = {
             "assets": [
@@ -44,7 +44,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_miss_termination(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_MISS_TERMINATION
+        mock_resolve.side_effect = spf.SPF_MISS_TERMINATION
 
         options = {
             "assets": [
@@ -61,7 +61,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_permissive(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_PERMISSIVE
+        mock_resolve.side_effect = spf.SPF_PERMISSIVE
 
         options = {
             "assets": [
@@ -78,7 +78,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_malformed(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_MALFORMED
+        mock_resolve.side_effect = spf.SPF_MALFORMED
 
         options = {
             "assets": [
@@ -98,7 +98,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_multiple(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_MULTIPLE
+        mock_resolve.side_effect = spf.SPF_MULTIPLE
 
         options = {
             "assets": [
@@ -115,7 +115,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_deprecated(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_DEPRECATED
+        mock_resolve.side_effect = spf.SPF_DEPRECATED
 
         options = {
             "assets": [
@@ -132,7 +132,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_high_dns_lookup(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_HIGH_LOOKUP
+        mock_resolve.side_effect = spf.SPF_HIGH_LOOKUP
 
         options = {
             "assets": [
@@ -149,7 +149,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_directive_after_all(self, mock_resolve):
 
-        mock_resolve.side_effect = mock_data.SPF_AFTER_ALL
+        mock_resolve.side_effect = spf.SPF_AFTER_ALL
 
         options = {
             "assets": [
