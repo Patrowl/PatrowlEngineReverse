@@ -5,7 +5,7 @@ import unittest.mock
 from pydantic import ValidationError
 from engine import engine
 from base_engine.test_case import TestEngine
-from .mock import WHOIS_RESULT_DOMAIN, WHOIS_RESULT_IP
+from .mock_test import WHOIS_RESULT_DOMAIN, WHOIS_RESULT_IP
 
 
 class TestEngine(TestEngine):
@@ -17,7 +17,7 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "domain", "value": "yohangastoud.fr"},
+                {"datatype": "domain", "value": "dummy.value"},
             ],
             "do_whois": True,
         }
@@ -33,7 +33,7 @@ class TestEngine(TestEngine):
 
         options = {
             "assets": [
-                {"datatype": "ip", "value": "8.8.8.8"},
+                {"datatype": "ip", "value": "dummy.value"},
             ],
             "do_whois": True,
         }
@@ -47,7 +47,7 @@ class TestEngine(TestEngine):
         mock_resolve.return_value = WHOIS_RESULT_DOMAIN
 
         options = {
-            "assets": [{"datatype": "domain", "value": "yohangastoud.fr"}],
+            "assets": [{"datatype": "domain", "value": "dummy.value"}],
             "do_advanced_whois": True,
         }
 

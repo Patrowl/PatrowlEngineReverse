@@ -108,19 +108,6 @@ class TestEngine(TestEngine):
             "Secure Email Gateway found: Microsoft/Microsoft 365 Defender Overview",
         )
 
-    def test_do_spf_check(self):
-        options = {
-            "assets": [
-                {"datatype": "domain", "value": "testederedededesddresdxsdxcfdxj.com"},
-                {"datatype": "domain", "value": "openmind.pk"},
-            ],
-            "do_spf_check": True,
-        }
-
-        results = self.engine.test_scan(options, self.metadatas)
-        print("\n\n\n")
-        print(results)
-
     def test_do_dkim_check(self):
         options = {
             "assets": [

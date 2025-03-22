@@ -12,6 +12,7 @@ import whois
 from ipwhois import IPWhois
 import re
 import parsers
+from etc.issues import spf_issues
 
 
 def __is_ip_addr(host):
@@ -248,28 +249,32 @@ def do_spf_check(asset_value: str):
     res["parsed_spf_record"] = parsed_spf_record
     res["issues"] = issues
 
-    print(issues)
-
     dns_spf_records = dns_resolve_asset(asset_value, "SPF")
     if dns_spf_records:
-        res.__setitem__({"dns_records": dns_spf_records})
-        res["txt_records"] = answers
+        res["issues"].append(spf_issues.DEPRECATED_SPF_RECORD)
+
     dns_lookup_limit = 10
     try:
         dns_lookup_count, spf_lookup_records = get_lookup_count_and_spf_records(
             domain=asset_value
         )
     except RecursionError as error:
-        res["recursion_error"] = (
-            f"More than {sys.getrecursionlimit()} DNS lookups are required to validate SPF record."
+        res["issues"].append(
+            dict(
+                spf_issues.DNS_LOOKUP_LIMIT,
+                extra_info=f"More than {sys.getrecursionlimit()} DNS lookups are required to validate SPF record.",
+            )
         )
 
     else:
         if dns_lookup_count > dns_lookup_limit:
-            res["dns_lookup_limit"] = (
-                f"{dns_lookup_count} DNS lookups are required to validate SPF record."
+            res["issues"].append(
+                dict(
+                    spf_issues.DNS_LOOKUP_LIMIT,
+                    value=spf_lookup_records[0] if spf_lookup_records else "",
+                    extra_info=f"{dns_lookup_count} DNS lookups are required to validate SPF record.",
+                )
             )
-
     return res
 
 
