@@ -1,13 +1,10 @@
-from base_engine.base_engine import Engine, Issue
+from base_engine.base_engine import Engine
 from metadatas import Metadatas, Options
 import concurrent.futures
 import os
 import sys
-import utils
 import json
 from typing import Any, Generator
-import json
-import parsers
 import scanners
 
 

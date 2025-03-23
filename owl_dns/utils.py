@@ -58,7 +58,7 @@ def _get_whois_ip(ip):
     try:
         w = IPWhois(ip.strip()).lookup_rdap()
         w_text = json.dumps(w, sort_keys=True) if w else "see raw"
-    except Exception as e:
+    except Exception:
         w_text = "see raw"
 
     return {
@@ -244,7 +244,7 @@ def do_spf_check(asset_value: str):
     res["txt_records"] = answers
 
     # Parses SPF records
-    parsed_spf_record, issues = parsers._parse_spf_record(answers)
+    parsed_spf_record, issues = parsers.parse_spf_record(answers)
     res["parsed_spf_record"] = parsed_spf_record
     res["issues"] = issues
 
@@ -257,7 +257,7 @@ def do_spf_check(asset_value: str):
         dns_lookup_count, spf_lookup_records = get_lookup_count_and_spf_records(
             domain=asset_value
         )
-    except RecursionError as error:
+    except RecursionError:
         res["issues"].append(
             dict(
                 spf_issues.DNS_LOOKUP_LIMIT,

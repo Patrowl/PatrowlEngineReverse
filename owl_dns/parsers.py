@@ -1,18 +1,5 @@
 import hashlib
-import sys
-import json
-import dns.zone
-import dns.resolver
-import dns
-import dns.message
-import dns.flags
-import dns.query
-import socket
-import validators
-import whois
-from ipwhois import IPWhois
 import re
-from base_engine.base_engine import Engine, Issue
 import datetime
 from etc.issues.dns_issues import DNS_ZONE_TRANSFER, DNS_RECURSION_AVAILABLE
 from etc.issues import spf_issues
@@ -584,7 +571,7 @@ def parse_advanced_whois(asset, result):
     return issues
 
 
-def _parse_spf_record(dns_records: list[str]) -> tuple[list, list]:
+def parse_spf_record(dns_records: list[str]) -> tuple[list, list]:
     # Basic mechanisms, they contribute to the language framework.
     # They do not specify a particular type of authorization scheme.
     basic_mechanisms = ["all", "include"]
