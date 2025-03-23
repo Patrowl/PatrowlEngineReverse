@@ -211,7 +211,6 @@ def parse_seg(asset, result):
             seg_title = (
                 f"{seg[seg_provider]['provider']}/{seg[seg_provider]['product']}"
             )
-            # TODO Find a way to return an array
             results.append(
                 {
                     "severity": "info",
