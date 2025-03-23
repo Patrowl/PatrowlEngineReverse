@@ -107,7 +107,7 @@ def dns_resolve_asset(
         record_types = [type_of_record]
     for record_type in record_types:
         try:
-            answers = resolver.query(asset, record_type)
+            answers = resolver.resolve(asset, record_type)
             # print([str(rdata) for rdata in answers])
         except dns.resolver.NoAnswer:
             pass
@@ -116,7 +116,8 @@ def dns_resolve_asset(
         except dns.resolver.NXDOMAIN:
             pass
         except Exception as e:
-            print(f"DNS resolve raises an exception for asset '{asset}'", e)
+            pass
+            # print(f"DNS resolve raises an exception for asset '{asset}'", e)
         else:
             res.append(
                 {
@@ -234,7 +235,6 @@ def do_seg_check(asset_value, seg_providers):
         return {"no_seg": "MX records found but no Secure Email Gateway set"}
 
 
-# TODO
 def do_spf_check(asset_value: str):
     """Check SPF record lookup"""
     res = {}

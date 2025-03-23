@@ -19,16 +19,16 @@ from etc.issues import spf_issues
 
 
 def parse_whois(asset, result):
-    # print('result' , result)
-    # check errors
     if "errors" in result:
         return {
             "severity": "info",
             "confidence": "certain",
             "target": {"addr": [asset], "protocol": "domain"},
-            "title": "[Whois] No match for '{}'".format(asset),
-            "description": "No Whois data available for domain '{}'. Note that Whois is available for registered domains only (not sub-domains): \n{}".format(
-                asset, result["errors"]
+            "title": f"[Whois] No match for '{asset}'",
+            "description": (
+                f"No Whois data available for domain '{asset}'. "
+                "Note that Whois is available for registered domains only (not sub-domains):\n"
+                f"{result['errors']}"
             ),
             "solution": "n/a",
             "metadata": {"tags": ["whois"]},
@@ -44,10 +44,8 @@ def parse_whois(asset, result):
             "severity": "info",
             "confidence": "certain",
             "target": {"addr": [asset], "protocol": "domain"},
-            "title": "Whois info for '{}' (HASH: {})".format(asset, whois_hash),
-            "description": "Whois Info (raw): \n\n{}".format(
-                str(result["raw"]["text"])
-            ),
+            "title": f"Whois info for '{asset}' (HASH: {whois_hash})",
+            "description": f"Whois Info (raw):\n\n{result['raw']['text']}",
             "solution": "n/a",
             "metadata": {"tags": ["whois", result["type"]]},
             "type": f"whois_{result['type']}_fullinfo",
@@ -55,8 +53,7 @@ def parse_whois(asset, result):
         }
 
 
-def _parse_subdomains(asset, result, create_new_assets):
-
+def parse_subdomains(asset, result, create_new_assets):
     issues = []
     # subdomain resolve
     if "subdomains_resolve" in result.keys():
@@ -165,12 +162,6 @@ def _parse_subdomains(asset, result, create_new_assets):
         )
 
     return issues
-
-
-def parse_subdomains(subdomain_as_new_asset):
-    return lambda asset, result: _parse_subdomains(
-        asset, result, subdomain_as_new_asset
-    )
 
 
 def parse_dns_resolve(asset, result):
@@ -360,7 +351,6 @@ def parse_spf(asset, result):
 
 
 def parse_advanced_whois(asset, result):
-
     issues = [parse_whois(asset, result)]
 
     if "errors" in result.keys():

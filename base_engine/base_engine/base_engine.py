@@ -54,8 +54,9 @@ class Engine(ABC):
     def _get_and_process_task(self):
         task = self.redis_client.blpop(self.queue_key, timeout=2)
         if not task:
-            self.logger.warning("No task found. Exiting.")
-            return
+            self.logger.debug("No task found")
+            time.sleep(10)
+            return self._get_and_process_task()
 
         key, value = task
         self._process_task(value)
@@ -118,4 +119,7 @@ class Engine(ABC):
     def start_scan(
         self, options: BaseModel, metadatas: BaseModel
     ) -> Generator[dict | list[dict], Any, None]:
+        pass
+
+    def load_config(self, metadatas):
         pass

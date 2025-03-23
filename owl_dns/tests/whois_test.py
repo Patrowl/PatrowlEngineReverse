@@ -6,7 +6,6 @@ from tests.mock import whois
 
 
 class TestEngine(TestEngine):
-
     @unittest.mock.patch("whois.whois")
     def test_do_whois(self, mock_whois):
         mock_whois.return_value = whois.get_dummy_whois()
@@ -21,6 +20,18 @@ class TestEngine(TestEngine):
         results = self.start_scan(options)
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["result"]["type"], "whois_domain_fullinfo")
+
+    # def test_do_whois_error(self):
+    #     options = {
+    #         "assets": [
+    #             {"datatype": "domain", "value": "sub.yohangastoud.fr"},
+    #         ],
+    #         "do_whois": True,
+    #     }
+
+    #     results = self.start_scan(options)
+    #     self.assertEqual(len(results), 1)
+    #     print(results)
 
     # @unittest.mock.patch("ipwhois.IPWhois")
     # def test_do_whois_ip(self, MockIPWhois):
