@@ -6,6 +6,7 @@ import sys
 import json
 from typing import Any, Generator
 from src import scanners
+from base_engine.custom_logger import logger
 
 
 class OwlDNS(Engine):
@@ -75,7 +76,7 @@ class OwlDNS(Engine):
                         )
                     if options.do_subdomains_bruteforce:
                         pass
-            self.logger.debug(f"Number of tasks to process: {len(futures)}")
+            logger.debug(f"Number of tasks to process: {len(futures)}")
             # Get tasks results
             for future in concurrent.futures.as_completed(futures):
                 try:
@@ -83,7 +84,7 @@ class OwlDNS(Engine):
                     if result:
                         yield result
                 except Exception as e:
-                    self.logger.error("Error during parsing", e)
+                    logger.error("Error during parsing", e)
 
 
 engine = OwlDNS(Options, Metadatas)
