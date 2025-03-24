@@ -66,6 +66,48 @@ Metadata consists of engine parameters such as API tokens and paths to binaries.
   3. **Define in Code:**  
      Add the type definition for the metadata in `metadata.py` to ensure proper data validation and typing.
 
+# 🛠️ Development
+
+Begin developing your engine by defining two methods in your `TemplateEngine` class (which you can rename to your engine's name):
+
+
+## ⚙️ load_config
+
+This method is **optional** and is called when the engine starts, receiving the engine metadata as its parameter. Use it to initialize components like your API client.
+
+- **Example Usage:**
+  ```python
+  def load_config(self, metadatas):
+      # Initialize your API client with secret metadata
+      self.api_client = lib.api_client(metadatas.secret_api_token)
+  ```
+- **Tip:**  
+  Once set up, you can access your API client later in the code via `self.api_client`.
+
+
+## 🚀 start_scan
+
+This method is called when the engine receives a scan request. It retrieves the options provided and initiates the scanning process. The results returned from this method are directly pushed into the datalake.
+
+### Return Options
+
+You must return either:
+
+- **A list of issues:**
+  ```python
+  return [{"issue": "test 1"}, {"issue": "test 2"}]
+  ```
+
+- **A generator (yield one or several issues):**
+  ```python
+  issues = [{"issue": "test 1"}, {"issue": "test 2"}]
+  for issue in issues:
+      yield issue
+  ```
+
+> 🌟 **Pro Tip:**  
+> Using a yield is often better because it immediately inserts each issue into the database. This means that if the engine crashes (e.g., due to a server shutdown), you won't lose the issues that have already been processed.
+
 
 ## 🔍 Testing Engine
 
