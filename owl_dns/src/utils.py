@@ -11,7 +11,7 @@ import validators
 import whois
 from ipwhois import IPWhois
 import re
-import parsers
+from src import parsers
 from etc.issues import spf_issues
 
 

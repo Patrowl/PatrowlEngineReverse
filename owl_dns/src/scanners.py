@@ -1,5 +1,5 @@
-import utils
-import parsers
+from src import utils
+from src import parsers
 
 
 def do_whois(asset):
@@ -24,16 +24,12 @@ def do_dns_resolve(asset):
 
 def do_dns_transfer(asset):
     result = utils.do_dns_transfer(asset)
-    if result:
-        return parsers.parse_dns_transfer(asset, result)
-    return None
+    return parsers.parse_dns_transfer(asset, result)
 
 
 def do_dns_recursive(asset):
     result = utils.do_dns_recursive(asset)
-    if result:
-        return parsers.parse_dns_recursive(asset, result)
-    return None
+    return parsers.parse_dns_recursive(asset, result)
 
 
 def do_seg_check(asset, seg_providers):

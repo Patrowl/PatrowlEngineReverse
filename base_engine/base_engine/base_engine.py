@@ -45,6 +45,10 @@ class Engine(ABC):
             metadatas = json.load(f)
             self._validate_and_load_config(metadatas)
 
+    def query_issues(self, query):
+        print(query)
+        return []
+
     def start(self):
         self.redis_client = redis.Redis(
             host="localhost", port=6379, db=0, decode_responses=True
@@ -52,10 +56,9 @@ class Engine(ABC):
         self._get_and_process_task()
 
     def _get_and_process_task(self):
-        task = self.redis_client.blpop(self.queue_key, timeout=2)
+        task = self.redis_client.blpop(self.queue_key, timeout=10)
         if not task:
             self.logger.debug("No task found")
-            time.sleep(10)
             return self._get_and_process_task()
 
         key, value = task

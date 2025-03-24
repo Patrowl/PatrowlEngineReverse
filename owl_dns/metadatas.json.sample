@@ -1,67 +1,12 @@
 {
-	"name": "PatrOwl - Dns module",
-	"description": "DNS Scanner",
+	"name": "DNS module",
+	"description": "Asset discovery, DNS Information",
 	"allowed_asset_types": [
 		"ip",
 		"domain",
 		"fqdn",
 		"keyword"
 	],
-	"assets": [{"datatype": "domain", "value": "yohangastoud.fr"}],
 	"sublist3r_bin_path": "/owl_dns/external-libs/Sublist3r",
-	"seg_path": "/owl_dns/etc/seg_list.json",
-	"options": {
-		"do_whois": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_advanced_whois": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_subdomain_enum": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_subdomains_resolve": {
-			"required": false,
-			"value": "boolean"
-		},
-		"subdomain_as_new_asset": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_subdomain_bruteforce": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_dns_resolve": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_dns_transfer": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_dns_recursive": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_seg_check": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_spf_check": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_dkim_check": {
-			"required": false,
-			"value": "boolean"
-		},
-		"do_dmarc_check": {
-			"required": false,
-			"value": "boolean"
-		}
-	}
+	"seg_path": "/owl_dns/etc/seg_list.json"
 }

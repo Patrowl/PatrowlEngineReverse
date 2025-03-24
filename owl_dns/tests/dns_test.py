@@ -39,7 +39,6 @@ class FakeAnswer:
 
 
 class TestEngine(TestEngine):
-
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_do_dns_resolve(self, mock_resolver):
         mock_resolver.side_effect = [
@@ -107,7 +106,7 @@ class TestEngine(TestEngine):
         results = self.start_scan(options)
         self.assertEqual(len(results), 0)
 
-    @unittest.mock.patch("utils.is_dns_recursive")
+    @unittest.mock.patch("src.utils.is_dns_recursive")
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_do_dns_recursive(self, mock_resolver, mock_dns_recursive):
         mock_dns_recursive.return_value = {
@@ -134,7 +133,7 @@ class TestEngine(TestEngine):
         self.assertEqual(results[0]["result"]["type"], "dns_recursive")
         self.assertEqual(results[0]["result"]["title"], "DNS recursion available")
 
-    @unittest.mock.patch("utils.is_dns_recursive")
+    @unittest.mock.patch("src.utils.is_dns_recursive")
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_do_no_dns_recursive(self, mock_resolver, mock_dns_recursive):
         mock_dns_recursive.return_value = None

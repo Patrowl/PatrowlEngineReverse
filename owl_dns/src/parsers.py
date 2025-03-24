@@ -259,6 +259,8 @@ def parse_dmarc(asset, result):
 
 
 def parse_dns_transfer(asset, result):
+    if not result:
+        return None
     issue = dict(DNS_ZONE_TRANSFER)
     description = issue.get("description", "")
     if "hosts" in result:
@@ -282,6 +284,8 @@ def parse_dns_transfer(asset, result):
 
 
 def parse_dns_recursive(asset, result):
+    if not result:
+        return None
     # Done DNS Recursive check ?
     issue = dict(DNS_RECURSION_AVAILABLE)
     description = issue.get("description", "")
