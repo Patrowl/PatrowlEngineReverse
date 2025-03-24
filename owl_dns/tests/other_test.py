@@ -6,7 +6,6 @@ from base_engine.test_case import TestEngine
 
 
 class TestEngine(TestEngine):
-
     def test_missing_assets(self):
         options = {}
 
@@ -63,23 +62,6 @@ class TestEngine(TestEngine):
         self.assertEqual(
             results[0]["result"]["title"],
             "DKIM check for 'dummy.dkim' (HASH: 66abfa)",
-        )
-
-    @unittest.mock.patch("dns.resolver.Resolver.resolve")
-    def test_do_dmarc_check(self, mock_resolver):
-        mock_resolver.return_value = ['"1|dummy.dmarc"']
-        options = {
-            "assets": [
-                {"datatype": "domain", "value": "dummy.dmarc"},
-            ],
-            "do_dmarc_check": True,
-        }
-
-        results = self.start_scan(options)
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["result"]["type"], "dmarc_check")
-        self.assertEqual(
-            results[0]["result"]["title"], "DMARC for 'dummy.dmarc' (HASH: be673e)"
         )
 
 

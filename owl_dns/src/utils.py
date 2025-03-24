@@ -282,17 +282,19 @@ def do_dmarc_check(asset_value):
     dns_records = dns_resolve_asset(asset_value, "TXT")
     for record in dns_records:
         for value in record["values"]:
-            if "DMARC" in value:
+            if "DMARC1" in value:
                 dmarc_dict.pop("no_dmarc_record")
-                if "p=none" in value:
-                    dmarc_dict["insecure_dmarc_policy"] = "high"
-                if "sp=none" in value:
-                    dmarc_dict["insecure_dmarc_subdomain_sp"] = "high"
-                for word in value.split(" "):
-                    if "pct=" in word:
-                        num = int(re.sub("\D", "", word))
-                        if num < 100:
-                            dmarc_dict["dmarc_partial_coverage"] = "medium"
+                terms = [term.strip(" ") for term in value.split(";")]
+                for term in terms:
+                    if "=" not in term:
+                        continue
+                    tag, value = term.split("=")
+                    if tag == "p" and value not in ["quarantine", "reject"]:
+                        dmarc_dict["insecure_dmarc_policy"] = value
+                    elif tag == "sp" and value not in ["quarantine", "reject"]:
+                        dmarc_dict["insecure_dmarc_subdomain_sp"] = value
+                    elif tag == "pct" and int(value) < 100:
+                        dmarc_dict["dmarc_partial_coverage"] = value
 
     return {"dmarc_dict": dmarc_dict, "dmarc_dict_dns_records": dns_records}
 

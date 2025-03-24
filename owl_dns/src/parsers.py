@@ -2,7 +2,7 @@ import hashlib
 import re
 import datetime
 from etc.issues.dns_issues import DNS_ZONE_TRANSFER, DNS_RECURSION_AVAILABLE
-from etc.issues import spf_issues
+from etc.issues import spf_issues, dmarc_issues
 
 
 def parse_whois(asset, result):
@@ -221,41 +221,74 @@ def parse_seg(asset, result):
 
 
 def parse_dkim(asset, result):
+    if not result:
+        return None
+
+    issues = []
     dkim_check = result["dkim_dict"]
     dkim_check_dns_records = result["dkim_dict_dns_records"]
     dkim_hash = hashlib.sha1(str(dkim_check_dns_records).encode("utf-8")).hexdigest()[
         :6
     ]
-    return {
-        "severity": "info",
-        "confidence": "certain",
-        "target": {"addr": [asset], "protocol": "domain"},
-        "title": "DKIM check for '{}' (HASH: {})".format(asset, dkim_hash),
-        "description": "DKIM check for '{}':\n\n{}".format(asset, str(dkim_check)),
-        "solution": "n/a",
-        "metadata": {"tags": ["domains", "dkim"]},
-        "type": "dkim_check",
-        "raw": result["dkim_dict"],
-    }
+
+    issues.append(
+        {
+            "severity": "info",
+            "confidence": "certain",
+            "target": {"addr": [asset], "protocol": "domain"},
+            "title": "DKIM check for '{}' (HASH: {})".format(asset, dkim_hash),
+            "description": "DKIM check for '{asset}':\n\n{}".format(
+                asset, str(dkim_check)
+            ),
+            "solution": "n/a",
+            "metadata": {"tags": ["domains", "dkim"]},
+            "type": "dkim_check",
+            "raw": result["dkim_dict"],
+        }
+    )
+
+    return issues
 
 
 def parse_dmarc(asset, result):
+    if not result:
+        return None
+    issues = []
     dmarc_check = result["dmarc_dict"]
     dmarc_check_dns_records = result["dmarc_dict_dns_records"]
-    for c in dmarc_check:
-        h = str(c) + str(dmarc_check_dns_records)
-        dmarc_hash = hashlib.sha1(h.encode("utf-8")).hexdigest()[:6]
+
+    def _build_issue(issue, value=""):
         return {
-            "severity": dmarc_check[c],
-            "confidence": "certain",
             "target": {"addr": [asset], "protocol": "domain"},
-            "title": "DMARC for '{}' (HASH: {})".format(asset, dmarc_hash),
-            "description": "{}\n".format(c),
-            "solution": "n/a",
             "metadata": {"tags": ["domains", "dmarc"]},
             "type": "dmarc_check",
-            "raw": result["dmarc_dict"],
+            "raw": dmarc_check_dns_records,
+            **issue,
+            "description": issue["description"].format(value=value),
         }
+
+    if "no_dmarc_record" in dmarc_check:
+        issues.append(_build_issue(dmarc_issues.NO_DMARC))
+    if "insecure_dmarc_policy" in dmarc_check:
+        issues.append(
+            _build_issue(
+                dmarc_issues.DMARC_LAX_POLICY, dmarc_check["insecure_dmarc_policy"]
+            )
+        )
+    if "insecure_dmarc_subdomain_sp" in dmarc_check:
+        issues.append(
+            _build_issue(
+                dmarc_issues.DMARC_LAX_SUBDOMAIN_POLICY,
+                dmarc_check["insecure_dmarc_subdomain_sp"],
+            )
+        )
+    if "dmarc_partial_coverage" in dmarc_check:
+        issues.append(
+            _build_issue(
+                dmarc_issues.DMARC_NOT_100_PCT, dmarc_check["dmarc_partial_coverage"]
+            )
+        )
+    return issues
 
 
 def parse_dns_transfer(asset, result):
