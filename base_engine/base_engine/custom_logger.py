@@ -1,4 +1,7 @@
 import logging
+import os
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", 20)
 
 
 class CustomFormatter(logging.Formatter):
@@ -25,10 +28,10 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-logger = logging.getLogger("PatrowlEngine")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("Engine")
+logger.setLevel(LOG_LEVEL)
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(LOG_LEVEL)
 ch.setFormatter(CustomFormatter())
 
 logger.addHandler(ch)

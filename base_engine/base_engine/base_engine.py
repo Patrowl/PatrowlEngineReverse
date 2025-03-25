@@ -6,6 +6,9 @@ import json
 from datetime import datetime
 import time
 from base_engine.custom_logger import logger
+import os
+
+RABBITMQ_ADDRESS = os.environ.get("RABBITMQ_ADDRESS", "localhost")
 
 
 class BaseOptions(BaseModel):
@@ -44,12 +47,24 @@ class Engine(ABC):
             metadatas = json.load(f)
             self._validate_and_load_config(metadatas)
 
+    def _validate_and_load_config(self, metadatas: dict):
+        """Validate metadata and load configuration."""
+        validated_metadatas = self.metadatas.model_validate(metadatas)
+        self.load_config(validated_metadatas)
+
+    ### DATABASES INTERACTIONS
+
+    # TODO
     def query_issues(self, query):
         print(query)
         return []
 
+    ### START & QUEUE PROCESS (Never called during unit testing)
+
     def start(self):
-        connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(RABBITMQ_ADDRESS)
+        )
         self.pika_channel = connection.channel()
 
         self._get_and_process_task()
@@ -69,10 +84,37 @@ class Engine(ABC):
         self.task = None
         self._get_and_process_task()
 
-    def _validate_and_load_config(self, metadatas: dict):
-        """Validate metadata and load configuration."""
-        validated_metadatas = self.metadatas.model_validate(metadatas)
-        self.load_config(validated_metadatas)
+    def _process_task(self):
+        method_frame, properties, body = self.task
+        """Processes a task from Redis queue."""
+        logger.info("Start processing task")
+        try:
+            task_data = json.loads(body)
+            print("task_data")
+            print(task_data)
+
+            options = self.scan_options.model_validate(task_data)
+            results = self.execute_scan(options)
+
+            for result in results:
+                # TODO
+                # print("Send to datalake:", result)
+                pass
+
+            return True
+        except Exception as e:
+            logger.error("Error processing task", e)
+            return False
+
+    ### UNIT TESTING PURPOSES
+
+    def test_scan(self, scan_option: dict, metadatas: dict):
+        """Test scan using provided options and metadata."""
+        self._validate_and_load_config(metadatas)
+        options = self.scan_options.model_validate(scan_option)
+        return self.execute_scan(options)
+
+    ### MAIN FUNCTION TO EXECUTE SCANS
 
     def execute_scan(self, options):
         """Execute the scan and return results."""
@@ -94,33 +136,7 @@ class Engine(ABC):
 
         return results
 
-    def test_scan(self, scan_option: dict, metadatas: dict):
-        """Test scan using provided options and metadata."""
-        self._validate_and_load_config(metadatas)
-        options = self.scan_options.model_validate(scan_option)
-        return self.execute_scan(options)
-
-    def _process_task(self):
-        method_frame, properties, body = self.task
-        """Processes a task from Redis queue."""
-        logger.info("Start processing task")
-        try:
-            task_data = json.loads(body)
-            print("task_data")
-            print(task_data)
-            # self.redis_client.rpush(self.processing_key, value)
-
-            options = self.scan_options.model_validate(task_data)
-            results = self.execute_scan(options)
-
-            for result in results:
-                print("Send to datalake:")
-                # print(result)
-
-            return True
-        except Exception as e:
-            logger.error("Error processing task", e)
-            return False
+    ### ABSTRACT METHODS
 
     @abstractmethod
     def start_scan(

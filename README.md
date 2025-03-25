@@ -1,14 +1,16 @@
-# Infra
+# Engines
 
-- A new queue system will be deployed. Setup a queue system like Redis on our infra. Must be acceded from Arsenal AND Engines
+[DEVELOPMENT DOC](ENGINE_DEV.md)
 
-- Engine will access a new DB to store raw data (datalake)
-    - Define the type of the DB required (MongoDB ?)
-    - Setup this new database on our infra
+Engine are listening a RabbitMQ queue `engine-EngineName` like `engine-OwlDNS`
 
-# Specs
+They consume a task in queue (state Ready --> Unacked). At the end of the process, the task is Ack
 
-- Engine can communicate with a db/arsenal to retreive previously retrieved informations.
-    - Define the type of information required
+Then, result is sent to a database
 
+## Env vars
 
+- RABBITMQ_ADDRESS=localhost
+    - Address of rabbit MQ
+- LOG_LEVEL=20
+    - 10=DEBUG 20=INFO 30=WARNING 40=ERROR 50=CRITICAL
