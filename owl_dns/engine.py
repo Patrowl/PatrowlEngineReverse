@@ -76,7 +76,9 @@ class OwlDNS(Engine):
                         )
                     if options.do_subdomains_bruteforce:
                         pass
-            logger.debug(f"Number of tasks to process: {len(futures)}")
+            logger.debug(
+                f"Scan {options.id} | Number of tasks to process: {len(futures)}"
+            )
             # Get tasks results
             for future in concurrent.futures.as_completed(futures):
                 try:
@@ -84,7 +86,7 @@ class OwlDNS(Engine):
                     if result:
                         yield result
                 except Exception as e:
-                    logger.error("Error during parsing", e)
+                    logger.error(f"Scan {options.id} | Error during parsing", e)
 
 
 engine = OwlDNS(Options, Metadatas)

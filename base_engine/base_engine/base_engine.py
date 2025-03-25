@@ -77,23 +77,23 @@ class Engine(ABC):
                 time.sleep(1)
 
         if self._process_task():
+            logger.info("Task processed")
             self.pika_channel.basic_ack(self.task[0].delivery_tag)
         else:
+            logger.error("Error while processing task")
             self.pika_channel.basic_cancel(self.task[0].delivery_tag)
 
         self.task = None
         self._get_and_process_task()
 
     def _process_task(self):
+        """Processes a task."""
         method_frame, properties, body = self.task
-        """Processes a task from Redis queue."""
-        logger.info("Start processing task")
         try:
             task_data = json.loads(body)
-            print("task_data")
-            print(task_data)
-
             options = self.scan_options.model_validate(task_data)
+            logger.info(f"Scan {options.id} | Start processing task")
+            logger.debug(f"Scan {options.id} | {task_data}")
             results = self.execute_scan(options)
 
             for result in results:
