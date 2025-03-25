@@ -1,6 +1,6 @@
 ../base_engine
 dnslib==0.9.23
-dnspython==2.6.1
+dnspython==2.0.0
 ipwhois==1.2.0
 netaddr==0.8.0
 psutil==5.9.8
