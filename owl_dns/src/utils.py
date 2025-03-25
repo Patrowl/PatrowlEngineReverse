@@ -278,23 +278,37 @@ def do_spf_check(asset_value: str):
 
 
 def do_dmarc_check(asset_value):
+    count_dmarc = 0
     dmarc_dict = {"no_dmarc_record": "info"}
     dns_records = dns_resolve_asset(asset_value, "TXT")
     for record in dns_records:
         for value in record["values"]:
+            print(value)
             if "DMARC1" in value:
-                dmarc_dict.pop("no_dmarc_record")
+                count_dmarc += 1
+                if "no_dmarc_record" in dmarc_dict:
+                    dmarc_dict.pop("no_dmarc_record")
+                if count_dmarc > 1:
+                    dmarc_dict["multiple_dmarc"] = value
+                    continue
+
                 terms = [term.strip(" ") for term in value.split(";")]
                 for term in terms:
-                    if "=" not in term:
-                        continue
-                    tag, value = term.split("=")
-                    if tag == "p" and value not in ["quarantine", "reject"]:
-                        dmarc_dict["insecure_dmarc_policy"] = value
-                    elif tag == "sp" and value not in ["quarantine", "reject"]:
-                        dmarc_dict["insecure_dmarc_subdomain_sp"] = value
-                    elif tag == "pct" and int(value) < 100:
-                        dmarc_dict["dmarc_partial_coverage"] = value
+                    try:
+                        if "=" not in term:
+                            continue
+                        tag, value = term.split("=")
+                        if tag == "p" and value not in ["quarantine", "reject"]:
+                            dmarc_dict["insecure_dmarc_policy"] = value
+                        elif tag == "sp" and value not in ["quarantine", "reject"]:
+                            dmarc_dict["insecure_dmarc_subdomain_sp"] = value
+                        elif tag == "pct" and int(value) < 100:
+                            dmarc_dict["dmarc_partial_coverage"] = value
+                        if tag in ["rua", "ruf"]:
+                            dmarc_dict["dmarc_reporting"] = value
+                    except:
+                        dmarc_dict["dmarc_malformed"] = term
+                        break
 
     return {"dmarc_dict": dmarc_dict, "dmarc_dict_dns_records": dns_records}
 

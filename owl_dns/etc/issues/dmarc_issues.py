@@ -22,3 +22,21 @@ DMARC_NOT_100_PCT = {
     "title": "Partial DMARC coverage",
     "description": "The DMARC 'pct' value is '{value}', meaning the DMARC policy will only be applied to {value}% of incoming mail.",
 }
+DMARC_MULTIPLE_RECORDS = {
+    "severity": "high",
+    "confidence": "certain",
+    "title": "Multiple DMARC records",
+    "description": "Multiple DMARC records were found, which is invalid and will cause DMARC to be ignored.",
+}
+DMARC_MISCONFIGURED = {
+    "severity": "high",
+    "confidence": "likely",
+    "title": "Invalid DMARC record",
+    "description": "The DMARC record contains syntax errors or an invalid value: '{value}', making it ineffective.",
+}
+DMARC_NO_REPORTING = {
+    "severity": "medium",
+    "confidence": "certain",
+    "title": "No DMARC reporting configured",
+    "description": "The DMARC record does not include a 'rua' or 'ruf' tag, making it difficult to monitor spoofing attempts.",
+}
