@@ -283,7 +283,6 @@ def do_dmarc_check(asset_value):
     dns_records = dns_resolve_asset(asset_value, "TXT")
     for record in dns_records:
         for value in record["values"]:
-            print(value)
             if "DMARC1" in value:
                 count_dmarc += 1
                 if "no_dmarc_record" in dmarc_dict:

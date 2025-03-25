@@ -256,8 +256,6 @@ def parse_dmarc(asset, result):
     issues = []
     dmarc_check = result["dmarc_dict"]
     dmarc_check_dns_records = result["dmarc_dict_dns_records"]
-    print("dmarc_check", dmarc_check)
-    print("dmarc_check_dns_records", dmarc_check_dns_records)
 
     def _build_issue(issue, value=""):
         return {
@@ -294,7 +292,7 @@ def parse_dmarc(asset, result):
             )
         )
 
-    if "dmarc_reporting" not in dmarc_check:
+    if "dmarc_reporting" not in dmarc_check and "no_dmarc_record" not in dmarc_check:
         issues.append(_build_issue(dmarc_issues.DMARC_NO_REPORTING))
 
     if "dmarc_malformed" in dmarc_check:
