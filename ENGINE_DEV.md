@@ -37,7 +37,7 @@ When you start a scan, you can specify various options for the engine. These opt
 - **Example:**  
   If your engine should accept assets (and each asset being an object like `{datatype: str, value: str}`), add the following attribute to `Options`:
   ```python
-  class Options(BaseModel):
+  class Options(BaseOptions):
       ...
       assets: List[Asset]
   ```
@@ -49,7 +49,9 @@ When you start a scan, you can specify various options for the engine. These opt
       datatype: str
       value: str
   ```
-  
+
+Options extends `BaseOptions`, which contains an id.
+
 > 💡 *Tip:* Check out the owl DNS example for further guidance on implementing these options.
 
 
@@ -69,6 +71,8 @@ Metadata consists of engine parameters such as API tokens and paths to binaries.
      Add the type definition for the metadata in `metadata.py` to ensure proper data validation and typing.
 
 ## 🛠️ Development
+
+First, you need to open `engine.py`. This is the entry of your engine
 
 Begin developing your engine by defining two methods in your `TemplateEngine` class (which you can rename to your engine's name):
 
