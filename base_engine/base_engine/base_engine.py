@@ -106,7 +106,7 @@ class Engine(ABC):
 
     ### MAIN FUNCTION TO EXECUTE SCANS
 
-    def execute_scan(self, options):
+    def execute_scan(self, options: BaseOptions):
         """Execute the scan and return results."""
         started_at = datetime.now().timestamp()
         results = []
@@ -119,6 +119,7 @@ class Engine(ABC):
                     {
                         "result": issue,
                         "finished_at": datetime.now().timestamp(),
+                        "scan_id": options.id,
                         "started_at": started_at,
                         "engine": self.__class__.__name__,
                     }
