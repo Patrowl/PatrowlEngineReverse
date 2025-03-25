@@ -8,7 +8,7 @@ setup(
     license="BSD 2-clause",
     packages=["base_engine"],
     install_requires=[
-        "redis==5.2.1",
+        "pika==1.3.2",
         "pydantic==2.10.6",
         "fastapi==0.115.12",
         "uvicorn==0.34.0",

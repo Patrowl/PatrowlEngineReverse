@@ -1,7 +1,7 @@
 from typing import Any, Generator
 from pydantic import BaseModel, Field
 from abc import ABC, abstractmethod
-import redis
+import pika
 import json
 from datetime import datetime
 import time
@@ -9,11 +9,13 @@ from fastapi import FastAPI
 import uvicorn
 from threading import Thread
 from base_engine.custom_logger import logger
+import random
 
 
 class BaseOptions(BaseModel):
     """Base scan options."""
 
+    id: int = 0
     pass
 
 
@@ -38,8 +40,7 @@ class Engine(ABC):
         metadata_path="metadatas.json",
     ):
         self.task = None
-        self.queue_key = f"queue:{self.__class__.__name__}"
-        self.processing_key = f"processing:{self.__class__.__name__}"
+        self.queue_key = f"engine-{self.__class__.__name__}"
         self.scan_options = scan_option
         self.metadatas = metadatas
 
@@ -54,7 +55,7 @@ class Engine(ABC):
         return []
 
     def _define_routes(self):
-        @self.app.get("/")
+        @self.app.get("/stauts")
         def get_task():
             if self.task:
                 return {"status": "RUNNING", "task": self.task[1]}
@@ -62,24 +63,36 @@ class Engine(ABC):
 
     def _run_server(self, port=8000):
         logger.info(f"Server is listening on port {port}")
-        uvicorn.run(self.app, host="0.0.0.0", port=port, log_level="error")
+        uvicorn.run(
+            self.app,
+            host="0.0.0.0",
+            port=port + random.randint(1, 400),
+            log_level="error",
+        )
 
     def start(self):
-        self.redis_client = redis.Redis(
-            host="localhost", port=6379, db=0, decode_responses=True
-        )
+        connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+        self.pika_channel = connection.channel()
+
         self._define_routes()
         thread = Thread(target=self._run_server, daemon=True)
         thread.start()
         self._get_and_process_task()
 
     def _get_and_process_task(self):
-        self.task = self.redis_client.blpop(self.queue_key, timeout=10)
-        if not self.task:
-            logger.debug("No task found")
-            return self._get_and_process_task()
+        logger.debug(f"Listening for messages in queue {self.queue_key}")
+        while not (self.task and self.task[0]):
+            self.task = self.pika_channel.basic_get(self.queue_key)
+            if not self.task[0]:
+                time.sleep(1)
 
-        self._process_task()
+        if self._process_task():
+            self.pika_channel.basic_ack(self.task[0].delivery_tag)
+        else:
+            self.pika_channel.basic_cancel(self.task[0].delivery_tag)
+
+        self.task = None
+        self._get_and_process_task()
 
     def _validate_and_load_config(self, metadatas: dict):
         """Validate metadata and load configuration."""
@@ -113,12 +126,14 @@ class Engine(ABC):
         return self.execute_scan(options)
 
     def _process_task(self):
-        key, value = self.task
+        method_frame, properties, body = self.task
         """Processes a task from Redis queue."""
         logger.info("Start processing task")
         try:
-            task_data = json.loads(value)
-            self.redis_client.rpush(self.processing_key, value)
+            task_data = json.loads(body)
+            print("task_data")
+            print(task_data)
+            # self.redis_client.rpush(self.processing_key, value)
 
             options = self.scan_options.model_validate(task_data)
             results = self.execute_scan(options)
@@ -127,16 +142,10 @@ class Engine(ABC):
                 print("Send to datalake:")
                 # print(result)
 
-            self.redis_client.lrem(self.processing_key, 0, value)
-            self._get_and_process_task()
+            return True
         except Exception as e:
-            self._handle_task_failure(value, task_data, e)
-
-    def _handle_task_failure(self, value: str, task_data: dict, error: Exception):
-        """Handles the failure of a task processing."""
-        logger.error(f"Error processing task: {error}")
-        self.redis_client.lrem(self.processing_key, 0, value)
-        self.redis_client.rpush(self.queue_key, json.dumps(task_data))
+            logger.error("Error processing task", e)
+            return False
 
     @abstractmethod
     def start_scan(
