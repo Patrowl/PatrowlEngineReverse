@@ -5,5 +5,5 @@ ipwhois==1.2.0
 netaddr==0.8.0
 psutil==5.9.8
 python-whois==0.8.0
-urllib3==1.26.18
+urllib3==1.26.19
 validators==0.20.0
