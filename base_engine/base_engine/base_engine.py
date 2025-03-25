@@ -72,9 +72,13 @@ class Engine(ABC):
     def _get_and_process_task(self):
         logger.debug(f"Listening for messages in queue {self.queue_key}")
         while not (self.task and self.task[0]):
-            self.task = self.pika_channel.basic_get(self.queue_key)
-            if not self.task[0]:
-                time.sleep(1)
+            try:
+                self.task = self.pika_channel.basic_get(self.queue_key)
+                if not self.task[0]:
+                    time.sleep(1)
+            except pika.exceptions.ChannelClosedByBroker as e:
+                logger.critical(e)
+                time.sleep(15)
 
         if self._process_task():
             logger.info("Task processed")

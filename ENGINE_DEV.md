@@ -181,3 +181,9 @@ Go to http://127.0.0.1:15672, `guest/guest` to visualize queues
 - Start your engine with `python engine.py` (in your python env & engine folder)
 
 Engine should consume the tasks
+
+## Docker build
+
+You need to be at the root of the directory
+
+`docker build --force-rm -t engine/owldns -f owl_dns/Dockerfile .`

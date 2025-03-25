@@ -7,6 +7,6 @@
 		"fqdn",
 		"keyword"
 	],
-	"sublist3r_bin_path": "/owl_dns/external-libs/Sublist3r",
-	"seg_path": "/owl_dns/etc/seg_list.json"
+	"sublist3r_bin_path": "/engine/external-libs/Sublist3r",
+	"seg_path": "/engine/etc/seg_list.json"
 }
