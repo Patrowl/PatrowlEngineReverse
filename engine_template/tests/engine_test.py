@@ -10,6 +10,7 @@ class TestEngine(TestEngine):
 
         results = self.start_scan(options)
         self.assertEqual(len(results), 2)
+        print("Result of the scan:", results)
         self.assertEqual(results[0]["result"]["info"], 1)
         self.assertEqual(results[1]["result"]["info"], 2)
 

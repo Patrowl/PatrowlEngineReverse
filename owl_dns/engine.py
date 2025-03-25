@@ -7,6 +7,21 @@ import json
 from typing import Any, Generator
 from src import scanners
 from base_engine.custom_logger import logger
+from pydantic import BaseModel, Field
+import time
+
+
+class Issue(BaseModel):
+    severity: str = "info"
+    confidence: str = "certain"
+    target: dict = Field(default_factory=dict)
+    title: str
+    description: str = "No description provided."
+    solution: str = "No solution available."
+    metadata: dict = Field(default_factory=dict)
+    type: str
+    raw: Any = Field(default_factory=dict)
+    timestamp: int = Field(default_factory=lambda: int(time.time()))
 
 
 class OwlDNS(Engine):
@@ -84,7 +99,8 @@ class OwlDNS(Engine):
                 try:
                     result = future.result()
                     if result:
-                        yield result
+                        for r in result if isinstance(result, list) else [result]:
+                            yield dict(Issue.model_validate(r))
                 except Exception as e:
                     logger.error(f"Scan {options.id} | Error during parsing", e)
 

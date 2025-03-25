@@ -1,5 +1,5 @@
 from typing import Any, Generator
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from abc import ABC, abstractmethod
 import pika
 import json
@@ -15,20 +15,6 @@ class BaseOptions(BaseModel):
     """Base scan options."""
 
     id: int = 0
-    pass
-
-
-class Issue(BaseModel):
-    severity: str = "info"
-    confidence: str = "certain"
-    target: dict = Field(default_factory=dict)
-    title: str
-    description: str = "No description provided."
-    solution: str = "No solution available."
-    metadata: dict = Field(default_factory=dict)
-    type: str
-    raw: Any = Field(default_factory=dict)
-    timestamp: int = Field(default_factory=lambda: int(time.time()))
 
 
 class Engine(ABC):
@@ -131,7 +117,7 @@ class Engine(ABC):
             for issue in issues_to_list:
                 results.append(
                     {
-                        "result": dict(Issue.model_validate(issue)),
+                        "result": issue,
                         "finished_at": datetime.now().timestamp(),
                         "started_at": started_at,
                         "engine": self.__class__.__name__,

@@ -12,9 +12,12 @@ class TemplateEngine(Engine):
         logger.info(f"Scan #{options.id} | Starting")
 
         for i in [1, 2]:
-            yield {"info": i, "example_option": options.example_option}
+            yield {
+                "info": i,
+                "example_option": options.example_option,
+            }
 
-        logger.debug(f"Scan #{options.id} | Over !")
+        logger.info(f"Scan #{options.id} | Over !")
 
 
 engine = TemplateEngine(Options, Metadatas)
