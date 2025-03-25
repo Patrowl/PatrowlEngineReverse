@@ -107,7 +107,7 @@ You must return either:
       yield issue
   ```
 
-> 🌟 **Pro Tip:**  
+> **Pro Tip:**  
 > Using a yield is often better because it immediately inserts each issue into the database. This means that if the engine crashes (e.g., due to a server shutdown), you won't lose the issues that have already been processed.
 
 
@@ -136,7 +136,9 @@ For scenarios where your engine interacts with external services (e.g., websites
 - **How To Do It:**  
   Use patching to override methods such as `requests.get` so that they return a custom object with your desired test data.
 
-### ▶️ Running Tests
+> Check the OwlDNS unit test for a detailed example on implementing mocking.
+
+### ▶ Running Tests
 
 <!-- > Usefull [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter) to easily run your tests -->
 
@@ -148,8 +150,6 @@ To execute all test cases in the `tests` folder, use:
 python -m unittest discover tests -p "*_test.py"
 ```
 
----
-
 #### 🎯 Run a Specific Test
 
 If you want to run a single test, for example, `test_do_dns_transfer()` from `tests/dns_test.py`, use:
@@ -160,10 +160,6 @@ python -m unittest tests.dns_test.TestEngine.test_do_dns_transfer
 
 > 💡 **Tip:** Running specific tests is useful when debugging a particular function without executing the entire test suite.
 
----
-
-Happy testing! ✅
-> Check the OwlDNS unit test for a detailed example on implementing mocking.
 
 ## *WIP* PRODUCTION Environement testing
 
