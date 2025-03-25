@@ -35,9 +35,11 @@ Follow these steps to get started:
 When you start a scan, you can specify various options for the engine. These options are defined in `metadatas.py` within the `Options` class. Specifying each option's type helps the engine validate inputs and enforce proper typing.
 
 - **Example:**  
-  If your engine should accept assets (each asset being an object like `{datatype: str, value: str}`), add the following attribute to `Options`:
+  If your engine should accept assets (and each asset being an object like `{datatype: str, value: str}`), add the following attribute to `Options`:
   ```python
-  assets: List[Asset]
+  class Options(BaseModel):
+      ...
+      assets: List[Asset]
   ```
 
 - **Define the Asset Class:**  
@@ -66,12 +68,12 @@ Metadata consists of engine parameters such as API tokens and paths to binaries.
   3. **Define in Code:**  
      Add the type definition for the metadata in `metadata.py` to ensure proper data validation and typing.
 
-# 🛠️ Development
+## 🛠️ Development
 
 Begin developing your engine by defining two methods in your `TemplateEngine` class (which you can rename to your engine's name):
 
 
-## ⚙️ load_config
+### ⚙️ load_config
 
 This method is **optional** and is called when the engine starts, receiving the engine metadata as its parameter. Use it to initialize components like your API client.
 
@@ -85,7 +87,7 @@ This method is **optional** and is called when the engine starts, receiving the 
   Once set up, you can access your API client later in the code via `self.api_client`.
 
 
-## 🚀 start_scan
+### 🚀 start_scan
 
 This method is called when the engine receives a scan request. It retrieves the options provided and initiates the scanning process. The results returned from this method are directly pushed into the datalake.
 
@@ -134,6 +136,48 @@ For scenarios where your engine interacts with external services (e.g., websites
 - **How To Do It:**  
   Use patching to override methods such as `requests.get` so that they return a custom object with your desired test data.
 
+### ▶️ Running Tests
 
+<!-- > Usefull [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=LittleFoxTeam.vscode-python-test-adapter) to easily run your tests -->
+
+#### 🚀 Run All Tests
+
+To execute all test cases in the `tests` folder, use:
+
+```bash
+python -m unittest discover tests -p "*_test.py"
+```
+
+---
+
+#### 🎯 Run a Specific Test
+
+If you want to run a single test, for example, `test_do_dns_transfer()` from `tests/dns_test.py`, use:
+
+```bash
+python -m unittest tests.dns_test.TestEngine.test_do_dns_transfer
+```
+
+> 💡 **Tip:** Running specific tests is useful when debugging a particular function without executing the entire test suite.
+
+---
+
+Happy testing! ✅
 > Check the OwlDNS unit test for a detailed example on implementing mocking.
 
+## *WIP* PRODUCTION Environement testing
+
+To test engine like it's gonna be used in production, you need to:
+
+- Setup rabbitmq
+```
+docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.0-management
+```
+
+Go to http://127.0.0.1:15672, `guest/guest` to visualize queues
+- Add some test tasks in rabbitMQ
+  - Check `task_add.py` for OwlDNS example
+
+- Start your engine with `python engine.py` (in your python env & engine folder)
+
+Engine should consume the tasks

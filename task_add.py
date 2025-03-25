@@ -1,17 +1,53 @@
-import redis
 import json
+import pika
 
-# Connexion à Redis
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 
-def push_task(task_data, task_type):
-    # Définir la clé de la file pour ce type de tâche
-    queue_key = f"queue:{task_type}"
-    # Convertir la tâche en JSON et l'ajouter à la file (ici, à droite)
-    redis_client.rpush(queue_key, json.dumps(task_data))
-    print(f"Tâche ajoutée dans {queue_key}")
+def push_task(queue_name, task_data):
+    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+    channel = connection.channel()
 
-# Exemple d'ajout de tâche
-if __name__ == '__main__':
-    task = {"id": 2, "assets": ["http://sutowl.fr"], "options": {"arg": "value1", "arg2": "value2"}}
-    push_task(task, "OwlDNS")
+    channel.queue_declare(queue=queue_name, durable=True)
+
+    message = json.dumps(task_data)
+    channel.basic_publish(
+        exchange="",
+        routing_key=queue_name,
+        body=message,
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # Rend le message persistant
+        ),
+    )
+
+    print(f" [x] Sent task to {queue_name}: {task_data}")
+    connection.close()
+
+
+def get_assets():
+    return [{"datatype": "domain", "value": "yohangastoud.fr"}]
+
+
+def get_options():
+    return {
+        # "create_new_assets": 1,
+        "do_subdomain_enum": True,
+        # "do_subdomains_resolve": True,
+        # "do_dns_recursive": True,
+        # "subdomain_as_new_asset": True,
+        # "do_subdomain_bruteforce": True,
+        # "do_dns_transfer": True,
+        # "do_spf_check": True,
+        # "do_seg_check": True,
+        # "do_dmarc_check": True,
+        # "do_dkim_check": True,
+        # "do_whois": True,
+        # "do_advanced_whois": True, # Not working on V1
+    }
+
+
+if __name__ == "__main__":
+    options = {
+        "assets": get_assets(),
+        **get_options(),
+    }
+    task = options
+    push_task("engine-OwlDNS", task)
