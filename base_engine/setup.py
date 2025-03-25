@@ -10,7 +10,5 @@ setup(
     install_requires=[
         "pika==1.3.2",
         "pydantic==2.10.6",
-        "fastapi==0.115.12",
-        "uvicorn==0.34.0",
     ],
 )

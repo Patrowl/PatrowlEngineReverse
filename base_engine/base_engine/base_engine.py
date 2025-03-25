@@ -5,11 +5,7 @@ import pika
 import json
 from datetime import datetime
 import time
-from fastapi import FastAPI
-import uvicorn
-from threading import Thread
 from base_engine.custom_logger import logger
-import random
 
 
 class BaseOptions(BaseModel):
@@ -48,35 +44,14 @@ class Engine(ABC):
             metadatas = json.load(f)
             self._validate_and_load_config(metadatas)
 
-        self.app = FastAPI()
-
     def query_issues(self, query):
         print(query)
         return []
-
-    def _define_routes(self):
-        @self.app.get("/stauts")
-        def get_task():
-            if self.task:
-                return {"status": "RUNNING", "task": self.task[1]}
-            return {"status": "IDLE"}
-
-    def _run_server(self, port=8000):
-        logger.info(f"Server is listening on port {port}")
-        uvicorn.run(
-            self.app,
-            host="0.0.0.0",
-            port=port + random.randint(1, 400),
-            log_level="error",
-        )
 
     def start(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
         self.pika_channel = connection.channel()
 
-        self._define_routes()
-        thread = Thread(target=self._run_server, daemon=True)
-        thread.start()
         self._get_and_process_task()
 
     def _get_and_process_task(self):
