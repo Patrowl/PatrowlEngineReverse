@@ -3,14 +3,13 @@ services:
     build:
       context: ..
       dockerfile: ./owl_dns/Dockerfile
-      args:
-        CONCURRENCY: 2
     restart: always
     depends_on:
       rabbitmq:
         condition: service_healthy
     environment:
       - RABBITMQ_ADDRESS=rabbitmq
+      - CONCURRENCY=2
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
