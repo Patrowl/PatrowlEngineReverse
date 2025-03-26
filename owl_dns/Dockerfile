@@ -25,6 +25,9 @@ RUN pip install -r /engine/requirements.txt
 # Final image
 FROM python:3.11-alpine
 
+ARG CONCURRENCY
+ENV CONCURRENCY ${CONCURRENCY}
+
 WORKDIR /engine
 
 ENV VIRTUAL_ENV=/opt/venv
@@ -36,4 +39,4 @@ COPY --from=builder /engine /engine
 
 # RUN apk add --no-cache libffi
 
-CMD ["celery", "-A", "tasks", "worker", "--queues=engine-OwlDNS", "--loglevel=info", "--concurrency=2", "--prefetch-multiplier=1"]
+CMD ["sh", "-c", "celery -A tasks worker --queues=engine-OwlDNS --loglevel=info --concurrency=${CONCURRENCY} --prefetch-multiplier=1"]

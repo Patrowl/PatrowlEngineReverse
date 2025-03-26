@@ -3,6 +3,8 @@ services:
     build:
       context: ..
       dockerfile: ./owl_dns/Dockerfile
+      args:
+        CONCURRENCY: 2
     restart: always
     depends_on:
       rabbitmq:
