@@ -1,6 +1,6 @@
 # Engines
 
-[DEVELOPMENT DOC](ENGINE_DEV.md)
+[DEVELOPMENT DOC](https://www.notion.so/Engines-V2-production-1c28ccd9bfb9808e8fceca671e473ee6)
 
 Engine are listening a RabbitMQ queue `engine-EngineName` like `engine-OwlDNS`
 
