@@ -54,6 +54,10 @@ class Engine(ABC):
         print(query)
         return []
 
+    # TODO
+    def _send_to_db(self, data: list):
+        print("send", len(data))
+
     ### START (Never called during unit testing)
 
     def start(self, data):
@@ -61,12 +65,17 @@ class Engine(ABC):
         options = self.scan_options.model_validate(data)
         issues_count = 0
 
+        batch = []
+        batch_size = 50
+
         for result in self._execute_scan(options):
-            print(time.time())
+            batch.append(result)
             issues_count += 1
-            # TODO
-            # print("Send to datalake:", result)
-            pass
+            if len(batch) >= batch_size:
+                self._send_to_db(batch)
+                batch.clear()
+        if batch:
+            self._send_to_db(batch)
 
         return issues_count
 
