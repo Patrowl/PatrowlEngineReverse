@@ -174,16 +174,15 @@ To test engine like it's gonna be used in production, you need to:
 docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.0-management
 ```
 
-Go to http://127.0.0.1:15672, `guest/guest` to visualize queues
+You can go to http://127.0.0.1:15672, `guest/guest` to visualize queues
+
 - Add some test tasks in rabbitMQ
   - Check `task_add.py` for OwlDNS example
 
-- Start your engine with `python engine.py` (in your python env & engine folder)
+- Start your engine with celery (don't forget to adapt the queue name) `celery -A tasks worker --queues=engine-OwlDNS --loglevel=info --logfile=celery.log --concurrency=2 --prefetch-multiplier=1` (in your python env & engine folder)
 
 Engine should consume the tasks
 
-## Docker build
+## Docker compose build
 
-You need to be at the root of the directory
-
-`docker build --force-rm -t engine/owldns -f owl_dns/Dockerfile .`
+`docker compose up --force-recreate --build`

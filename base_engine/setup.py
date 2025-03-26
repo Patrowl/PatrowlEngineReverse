@@ -8,7 +8,7 @@ setup(
     license="BSD 2-clause",
     packages=["base_engine"],
     install_requires=[
-        "pika==1.3.2",
+        "celery==5.4.0",
         "pydantic==2.10.6",
     ],
 )

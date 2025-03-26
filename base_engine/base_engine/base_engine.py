@@ -1,14 +1,10 @@
-from typing import Any, Generator
+from typing import Any, Generator, List, Dict
 from pydantic import BaseModel
 from abc import ABC, abstractmethod
-import pika
 import json
 from datetime import datetime
 import time
 from base_engine.custom_logger import logger
-import os
-
-RABBITMQ_ADDRESS = os.environ.get("RABBITMQ_ADDRESS", "localhost")
 
 
 class BaseOptions(BaseModel):
@@ -33,10 +29,28 @@ class Engine(ABC):
             metadatas = json.load(f)
             self._validate_and_load_config(metadatas)
 
+    ### UTILS
+
     def _validate_and_load_config(self, metadatas: dict):
         """Validate metadata and load configuration."""
         validated_metadatas = self.metadatas.model_validate(metadatas)
         self.load_config(validated_metadatas)
+
+    def _format_scan_results(self, options: BaseOptions, issues) -> List[Dict]:
+        """Format scan results into a standardized dictionary."""
+        started_at = datetime.now().timestamp()
+        issues_to_list = issues if isinstance(issues, list) else [issues]
+
+        return [
+            {
+                "result": issue,
+                "finished_at": datetime.now().timestamp(),
+                "scan_id": options.id,
+                "started_at": started_at,
+                "engine": self.__class__.__name__,
+            }
+            for issue in issues_to_list
+        ]
 
     ### DATABASES INTERACTIONS
 
@@ -45,56 +59,28 @@ class Engine(ABC):
         print(query)
         return []
 
-    ### START & QUEUE PROCESS (Never called during unit testing)
+    ### START (Never called during unit testing)
 
-    def start(self):
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(RABBITMQ_ADDRESS)
-        )
-        self.pika_channel = connection.channel()
+    def start(self, data):
+        logger.info("Start scan with data", data)
+        options = self.scan_options.model_validate(data)
+        issues_count = 0
 
-        self._get_and_process_task()
+        for result in self._execute_scan(options):
+            print(time.time())
+            issues_count += 1
+            # TODO
+            # print("Send to datalake:", result)
+            pass
 
-    def _get_and_process_task(self):
-        logger.debug(f"Listening for messages in queue {self.queue_key}")
-        while not (self.task and self.task[0]):
-            try:
-                self.task = self.pika_channel.basic_get(self.queue_key)
-                if not self.task[0]:
-                    time.sleep(1)
-            except pika.exceptions.ChannelClosedByBroker as e:
-                logger.critical(e)
-                time.sleep(15)
+        return issues_count
 
-        if self._process_task():
-            logger.info("Task processed")
-            self.pika_channel.basic_ack(self.task[0].delivery_tag)
-        else:
-            logger.error("Error while processing task")
-            self.pika_channel.basic_cancel(self.task[0].delivery_tag)
+    ### MAIN FUNCTION TO EXECUTE SCANS (Never called during unit testing)
 
-        self.task = None
-        self._get_and_process_task()
-
-    def _process_task(self):
-        """Processes a task."""
-        method_frame, properties, body = self.task
-        try:
-            task_data = json.loads(body)
-            options = self.scan_options.model_validate(task_data)
-            logger.info(f"Scan {options.id} | Start processing task")
-            logger.debug(f"Scan {options.id} | {task_data}")
-            results = self.execute_scan(options)
-
-            for result in results:
-                # TODO
-                # print("Send to datalake:", result)
-                pass
-
-            return True
-        except Exception as e:
-            logger.error("Error processing task", e)
-            return False
+    def _execute_scan(self, options: BaseOptions) -> Generator[Dict, None, None]:
+        """Execute the scan and yield results."""
+        for issues in self.start_scan(options):
+            yield from self._format_scan_results(options, issues)
 
     ### UNIT TESTING PURPOSES
 
@@ -102,29 +88,13 @@ class Engine(ABC):
         """Test scan using provided options and metadata."""
         self._validate_and_load_config(metadatas)
         options = self.scan_options.model_validate(scan_option)
-        return self.execute_scan(options)
+        return self._execute_test_scan(options)
 
-    ### MAIN FUNCTION TO EXECUTE SCANS
-
-    def execute_scan(self, options: BaseOptions):
-        """Execute the scan and return results."""
-        started_at = datetime.now().timestamp()
+    def _execute_test_scan(self, options: BaseOptions) -> List[Dict]:
+        """Execute the scan and return results as a list."""
         results = []
-
         for issues in self.start_scan(options):
-            issues_to_list = issues if isinstance(issues, list) else [issues]
-
-            for issue in issues_to_list:
-                results.append(
-                    {
-                        "result": issue,
-                        "finished_at": datetime.now().timestamp(),
-                        "scan_id": options.id,
-                        "started_at": started_at,
-                        "engine": self.__class__.__name__,
-                    }
-                )
-
+            results.extend(self._format_scan_results(options, issues))
         return results
 
     ### ABSTRACT METHODS

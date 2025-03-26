@@ -36,4 +36,4 @@ COPY --from=builder /engine /engine
 
 # RUN apk add --no-cache libffi
 
-CMD ["python", "engine.py"]
+CMD ["celery", "-A", "tasks", "worker", "--queues=engine-OwlDNS", "--loglevel=info", "--concurrency=2", "--prefetch-multiplier=1"]
