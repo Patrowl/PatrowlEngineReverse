@@ -237,9 +237,7 @@ def parse_dkim(asset, result):
             "confidence": "certain",
             "target": {"addr": [asset], "protocol": "domain"},
             "title": "DKIM check for '{}' (HASH: {})".format(asset, dkim_hash),
-            "description": "DKIM check for '{asset}':\n\n{}".format(
-                asset, str(dkim_check)
-            ),
+            "description": f"DKIM check for '{asset}':\n\n{dkim_check}",
             "solution": "n/a",
             "metadata": {"tags": ["domains", "dkim"]},
             "type": "dkim_check",
