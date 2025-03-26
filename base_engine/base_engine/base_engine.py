@@ -23,18 +23,13 @@ class Engine(ABC):
         self.task = None
         self.queue_key = f"engine-{self.__class__.__name__}"
         self.scan_options = scan_option
-        self.metadatas = metadatas
 
         with open(metadata_path, "r", encoding="utf-8") as f:
-            metadatas = json.load(f)
-            self._validate_and_load_config(metadatas)
+            data = json.load(f)
+            self.metadatas = metadatas.model_validate(data)
+            self.load_config(self.metadatas)
 
     ### UTILS
-
-    def _validate_and_load_config(self, metadatas: dict):
-        """Validate metadata and load configuration."""
-        validated_metadatas = self.metadatas.model_validate(metadatas)
-        self.load_config(validated_metadatas)
 
     def _format_scan_results(self, options: BaseOptions, issues) -> List[Dict]:
         """Format scan results into a standardized dictionary."""
@@ -84,9 +79,8 @@ class Engine(ABC):
 
     ### UNIT TESTING PURPOSES
 
-    def test_scan(self, scan_option: dict, metadatas: dict):
+    def test_scan(self, scan_option: dict):
         """Test scan using provided options and metadata."""
-        self._validate_and_load_config(metadatas)
         options = self.scan_options.model_validate(scan_option)
         return self._execute_test_scan(options)
 
