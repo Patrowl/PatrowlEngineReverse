@@ -13,6 +13,8 @@ from ipwhois import IPWhois
 import re
 from src import parsers
 from etc.issues import spf_issues
+import base64
+from cryptography.hazmat.primitives import serialization
 
 
 def __is_ip_addr(host):
@@ -278,18 +280,12 @@ def do_spf_check(asset_value: str):
 
 
 def do_dmarc_check(asset_value):
-    count_dmarc = 0
-    dmarc_dict = {"no_dmarc_record": "info"}
+    dmarc_dict = {"records": []}
     dns_records = dns_resolve_asset(asset_value, "TXT")
     for record in dns_records:
         for value in record["values"]:
             if "DMARC1" in value:
-                count_dmarc += 1
-                if "no_dmarc_record" in dmarc_dict:
-                    dmarc_dict.pop("no_dmarc_record")
-                if count_dmarc > 1:
-                    dmarc_dict["multiple_dmarc"] = value
-                    continue
+                dmarc_dict["records"].append(value)
 
                 terms = [term.strip(" ") for term in value.split(";")]
                 for term in terms:
@@ -309,40 +305,37 @@ def do_dmarc_check(asset_value):
                         dmarc_dict["dmarc_malformed"] = term
                         break
 
-    return {"dmarc_dict": dmarc_dict, "dmarc_dict_dns_records": dns_records}
+    return dmarc_dict
 
 
 def do_dkim_check(asset_value):
-    dkimlist = [
-        "s1",
-        "s2",
-        "selector1",
-        "selector2",
-        "everlytickey1",
-        "everlytickey2",
-        "eversrv",
-        "k1",
-        "mxvault",
-        "dkim",
-    ]
+    dkim_dict = {"records": []}
+    dns_records = dns_resolve_asset(asset_value, "TXT")
 
-    dkim_dict = {}
-    found_dkim = False
-    dkim_found_list = {}
-    for selector in dkimlist:
-        dkim_record = selector + "._domainkey." + asset_value
-        dns_records = dns_resolve_asset(dkim_record)
-        if len(dns_records) > 0:
-            found_dkim = True
-            for dns_record in dns_records:
-                for value in dns_record["values"]:
-                    dkim_found_list[selector] = value
-    if not found_dkim:
-        dkim_dict["dkim"] = "couldn't find the selector in our list"
-    else:
-        dkim_dict["dkim"] = dkim_found_list
+    for record in dns_records:
+        for value in record["values"]:
+            if "DKIM1" in value:
+                dkim_dict["records"].append(value)
+                if "p=" not in value:
+                    dkim_dict["missing_p_tag"] = value
 
-    return {"dkim_dict": dkim_dict, "dkim_dict_dns_records": dns_records}
+                terms = [term.strip(" ") for term in value.split(";")]
+                for term in terms:
+                    try:
+                        if "=" not in term:
+                            continue
+                        tag, value = term.split("=", 1)
+                        if tag == "p":
+                            key_size = serialization.load_pem_public_key(
+                                base64.b64decode(value)
+                            ).key_size
+                            if key_size <= 1024:
+                                dkim_dict["weak_key"] = key_size
+                    except:
+                        dkim_dict["malformed"] = term
+                        break
+
+    return dkim_dict
 
 
 def get_lookup_count_and_spf_records(domain: str) -> tuple[int, list[tuple[str, str]]]:

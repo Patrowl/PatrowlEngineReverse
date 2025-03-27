@@ -14,23 +14,23 @@ DKIM_NO_ROTATION = {
     "severity": "medium",
     "confidence": "likely",
     "title": "DKIM key not rotated",
-    "description": "The DKIM selector '{selector}' has been used for a long time without rotation. Regular key rotation is recommended for security.",
+    "description": "The DKIM selector '{value}' has been used for a long time without rotation. Regular key rotation is recommended for security.",
 }
 DKIM_MISCONFIGURED = {
     "severity": "high",
     "confidence": "likely",
     "title": "Invalid DKIM record",
-    "description": "The DKIM record for selector '{selector}' contains syntax errors or an invalid value, making DKIM ineffective.",
+    "description": "The DKIM record for selector '{value}' contains syntax errors or an invalid value, making DKIM ineffective.",
 }
 DKIM_MULTIPLE_RECORDS = {
     "severity": "high",
     "confidence": "certain",
     "title": "Multiple DKIM records detected",
-    "description": "Multiple DKIM records were found for selector '{selector}', which may cause validation issues.",
+    "description": "Multiple DKIM records were found for selector '{value}', which may cause validation issues.",
 }
-DKIM_SELECTOR_NOT_FOUND = {
+DKIM_P_TAG_NOT_FOUND = {
     "severity": "high",
     "confidence": "certain",
-    "title": "DKIM selector not found",
-    "description": "The DKIM selector '{selector}' does not exist in the DNS, meaning DKIM signatures cannot be verified.",
+    "title": "DKIM p tag not found",
+    "description": "The DKIM p tag does not exist.",
 }

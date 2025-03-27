@@ -2,7 +2,7 @@ import hashlib
 import re
 import datetime
 from etc.issues.dns_issues import DNS_ZONE_TRANSFER, DNS_RECURSION_AVAILABLE
-from etc.issues import spf_issues, dmarc_issues
+from etc.issues import spf_issues, dmarc_issues, dkim_issues
 
 
 def parse_whois(asset, result):
@@ -221,84 +221,77 @@ def parse_seg(asset, result):
 
 
 def parse_dkim(asset, result):
-    if not result:
-        return None
-
     issues = []
-    dkim_check = result["dkim_dict"]
-    dkim_check_dns_records = result["dkim_dict_dns_records"]
-    dkim_hash = hashlib.sha1(str(dkim_check_dns_records).encode("utf-8")).hexdigest()[
-        :6
-    ]
 
-    issues.append(
-        {
-            "severity": "info",
-            "confidence": "certain",
-            "target": {"addr": [asset], "protocol": "domain"},
-            "title": "DKIM check for '{}' (HASH: {})".format(asset, dkim_hash),
-            "description": f"DKIM check for '{asset}':\n\n{dkim_check}",
-            "solution": "n/a",
-            "metadata": {"tags": ["domains", "dkim"]},
+    def _build_issue(issue, value=""):
+        return {
             "type": "dkim_check",
-            "raw": result["dkim_dict"],
+            "metadata": {"tags": ["domains", "dkim"]},
+            "target": {"addr": [asset], "protocol": "domain"},
+            "raw": result["records"],
+            **issue,
+            "description": issue["description"].format(value=value),
         }
-    )
 
+    if len(result["records"]) == 0:
+        issues.append(_build_issue(dkim_issues.NO_DKIM))
+    elif len(result["records"]) > 1:
+        issues.append(_build_issue(dkim_issues.DKIM_MULTIPLE_RECORDS))
+    else:
+        if "missing_p_tag" in result:
+            issues.append(_build_issue(dkim_issues.DKIM_P_TAG_NOT_FOUND))
+        if "weak_key" in result:
+            issues.append(_build_issue(dkim_issues.DKIM_WEAK_KEY, result["weak_key"]))
     return issues
 
 
 def parse_dmarc(asset, result):
-    if not result:
-        return None
     issues = []
-    dmarc_check = result["dmarc_dict"]
-    dmarc_check_dns_records = result["dmarc_dict_dns_records"]
 
     def _build_issue(issue, value=""):
         return {
             "target": {"addr": [asset], "protocol": "domain"},
             "metadata": {"tags": ["domains", "dmarc"]},
             "type": "dmarc_check",
-            "raw": dmarc_check_dns_records,
+            "raw": result["records"],
             **issue,
             "description": issue["description"].format(value=value),
         }
 
-    if "multiple_dmarc" in dmarc_check:
-        return _build_issue(dmarc_issues.DMARC_MULTIPLE_RECORDS)
-
-    if "no_dmarc_record" in dmarc_check:
+    if len(result["records"]) == 0:
         issues.append(_build_issue(dmarc_issues.NO_DMARC))
-    if "insecure_dmarc_policy" in dmarc_check:
-        issues.append(
-            _build_issue(
-                dmarc_issues.DMARC_LAX_POLICY, dmarc_check["insecure_dmarc_policy"]
+    elif len(result["records"]) > 1:
+        issues.append(_build_issue(dmarc_issues.DMARC_MULTIPLE_RECORDS))
+    else:
+        if "insecure_dmarc_policy" in result:
+            issues.append(
+                _build_issue(
+                    dmarc_issues.DMARC_LAX_POLICY, result["insecure_dmarc_policy"]
+                )
             )
-        )
-    if "insecure_dmarc_subdomain_sp" in dmarc_check:
-        issues.append(
-            _build_issue(
-                dmarc_issues.DMARC_LAX_SUBDOMAIN_POLICY,
-                dmarc_check["insecure_dmarc_subdomain_sp"],
+        if "insecure_dmarc_subdomain_sp" in result:
+            issues.append(
+                _build_issue(
+                    dmarc_issues.DMARC_LAX_SUBDOMAIN_POLICY,
+                    result["insecure_dmarc_subdomain_sp"],
+                )
             )
-        )
-    if "dmarc_partial_coverage" in dmarc_check:
-        issues.append(
-            _build_issue(
-                dmarc_issues.DMARC_NOT_100_PCT, dmarc_check["dmarc_partial_coverage"]
+        if "dmarc_partial_coverage" in result:
+            issues.append(
+                _build_issue(
+                    dmarc_issues.DMARC_NOT_100_PCT, result["dmarc_partial_coverage"]
+                )
             )
-        )
 
-    if "dmarc_reporting" not in dmarc_check and "no_dmarc_record" not in dmarc_check:
-        issues.append(_build_issue(dmarc_issues.DMARC_NO_REPORTING))
+        if "dmarc_reporting" not in result:
+            issues.append(_build_issue(dmarc_issues.DMARC_NO_REPORTING))
 
-    if "dmarc_malformed" in dmarc_check:
-        issues.append(
-            _build_issue(
-                dmarc_issues.DMARC_MISCONFIGURED, dmarc_check["dmarc_malformed"]
+        if "dmarc_malformed" in result:
+            issues.append(
+                _build_issue(
+                    dmarc_issues.DMARC_MISCONFIGURED, result["dmarc_malformed"]
+                )
             )
-        )
 
     return issues
 
