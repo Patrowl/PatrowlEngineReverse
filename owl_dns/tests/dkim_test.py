@@ -89,6 +89,22 @@ class TestEngine(TestEngine):
         results = self.start_scan(options)
         self.assertEqual(len(results), 0)
 
+    @unittest.mock.patch("dns.resolver.Resolver.resolve")
+    def test_invalid_syntax(self, mock_resolver=None):
+        mock_resolver.return_value = [
+            "v=DKIM1, p=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF5aG1reHlSQ01JY",
+        ]
+        options = {
+            "assets": [
+                {"datatype": "domain", "value": "dummy.dmarc"},
+            ],
+            "do_dkim_check": True,
+        }
+
+        results = self.start_scan(options)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["result"]["title"], "Invalid DKIM record")
+
 
 if __name__ == "__main__":
     unittest.main()

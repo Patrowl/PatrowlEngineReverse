@@ -10,18 +10,6 @@ DKIM_WEAK_KEY = {
     "title": "Weak DKIM key",
     "description": "The DKIM public key is too short ({value} bits). It is recommended to use at least 1024 bits, preferably 2048 bits, to prevent cryptographic attacks.",
 }
-DKIM_NO_ROTATION = {
-    "severity": "medium",
-    "confidence": "likely",
-    "title": "DKIM key not rotated",
-    "description": "The DKIM selector '{value}' has been used for a long time without rotation. Regular key rotation is recommended for security.",
-}
-DKIM_MISCONFIGURED = {
-    "severity": "high",
-    "confidence": "likely",
-    "title": "Invalid DKIM record",
-    "description": "The DKIM record for selector '{value}' contains syntax errors or an invalid value, making DKIM ineffective.",
-}
 DKIM_MULTIPLE_RECORDS = {
     "severity": "high",
     "confidence": "certain",
@@ -33,4 +21,10 @@ DKIM_P_TAG_NOT_FOUND = {
     "confidence": "certain",
     "title": "DKIM p tag not found",
     "description": "The DKIM p tag does not exist.",
+}
+DKIM_MISCONFIGURED = {
+    "severity": "high",
+    "confidence": "likely",
+    "title": "Invalid DKIM record",
+    "description": "The DKIM record for selector '{value}' contains syntax errors or an invalid value, making DKIM ineffective.",
 }

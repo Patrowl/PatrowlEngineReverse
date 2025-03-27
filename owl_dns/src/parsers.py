@@ -242,6 +242,10 @@ def parse_dkim(asset, result):
             issues.append(_build_issue(dkim_issues.DKIM_P_TAG_NOT_FOUND))
         if "weak_key" in result:
             issues.append(_build_issue(dkim_issues.DKIM_WEAK_KEY, result["weak_key"]))
+        if "malformed" in result:
+            issues.append(
+                _build_issue(dkim_issues.DKIM_MISCONFIGURED, result["malformed"])
+            )
     return issues
 
 

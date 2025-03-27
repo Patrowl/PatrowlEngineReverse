@@ -331,6 +331,8 @@ def do_dkim_check(asset_value):
                             ).key_size
                             if key_size <= 1024:
                                 dkim_dict["weak_key"] = key_size
+                        elif "=" in value:
+                            dkim_dict["malformed"] = term
                     except:
                         dkim_dict["malformed"] = term
                         break

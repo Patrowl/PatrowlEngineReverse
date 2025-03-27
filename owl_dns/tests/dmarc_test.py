@@ -52,6 +52,10 @@ class TestEngine(TestEngine):
         self.assertEqual(results[0]["result"]["title"], "Lax DMARC policy")
         self.assertEqual(results[1]["result"]["title"], "Partial DMARC coverage")
         self.assertEqual(
+            results[1]["result"]["raw"],
+            ["v=DMARC1; p=none; pct=50; rua=mailto:mailauth-reports@google.com"],
+        )
+        self.assertEqual(
             results[1]["result"]["description"],
             "The DMARC 'pct' value is '50', meaning the DMARC policy will only be applied to 50% of incoming mail.",
         )
@@ -108,7 +112,7 @@ class TestEngine(TestEngine):
     @unittest.mock.patch("dns.resolver.Resolver.resolve")
     def test_malformed(self, mock_resolver=None):
         mock_resolver.return_value = [
-            '"v=DMARC1; rua=mailto:postmaster@example.com; p=reject, adkim=s; aspf=s"',
+            '"v=DMARC1, rua=mailto:postmaster@example.com; p=reject; rua=s; aspf=s"',
         ]
         options = {
             "assets": [
@@ -118,8 +122,9 @@ class TestEngine(TestEngine):
         }
 
         results = self.start_scan(options)
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["result"]["title"], "Invalid DMARC record")
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]["result"]["title"], "No DMARC reporting configured")
+        self.assertEqual(results[1]["result"]["title"], "Invalid DMARC record")
 
 
 if __name__ == "__main__":
