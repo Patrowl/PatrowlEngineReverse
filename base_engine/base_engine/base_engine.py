@@ -5,7 +5,12 @@ import json
 from datetime import datetime
 import time
 from base_engine.custom_logger import logger
-from base_engine.utils import push_issues_arsenal, set_started_db, set_finished_db
+from base_engine.utils import (
+    push_issues_arsenal,
+    set_started_db,
+    set_finished_db,
+    set_enqueued_db,
+)
 
 
 class BaseOptions(BaseModel):
@@ -58,7 +63,7 @@ class Engine(ABC):
     # TODO
     def _send_to_arsenal_db(self, data: list):
         logger.info(f"Sending {len(data)} issues to Arsenal")
-        push_issues_arsenal(data)
+        return push_issues_arsenal(data)
 
     def _send_to_nosql_db(self, data: list):
         logger.info(f"Sending {len(data)} issues to NoSQL db")
@@ -90,8 +95,11 @@ class Engine(ABC):
         set_finished_db(options.id)
 
         # Temporary. Send issues also to arsenal
-        self._send_to_arsenal_db(issues)
-        return len(issues)
+        if self._send_to_arsenal_db(issues):
+            return len(issues)
+        else:
+            set_enqueued_db(options.id)
+            raise Exception("Scan re-enqueued")
 
     ### MAIN FUNCTION TO EXECUTE SCANS (Never called during unit testing)
 

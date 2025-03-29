@@ -20,7 +20,7 @@ ARSENAL_TOKEN = os.environ.get(
 
 
 def push_issues_arsenal(
-    issues: list, max_retries: int = 5, sleep_time: int = 2
+    issues: list, max_retries: int = 1, sleep_time: int = 10
 ) -> bool:
     endpoint = f"{ARSENAL_URL}/findings/api/v1/raw/"
     headers = {"Authorization": f"Token {ARSENAL_TOKEN}"}
@@ -36,6 +36,7 @@ def push_issues_arsenal(
             res_json = response.json()
 
             if res_json.get("success"):
+                logger.debug("Issues sent to Arsenal")
                 return True
             else:
                 logger.error(f"Error pushing issues on Arsenal: {res_json}")
@@ -69,8 +70,8 @@ def set_started_db(scan_id: str):
                     """,
                     ("started", scan_id, "running"),
                 )
-                logger.info(f"Set scan_job {scan_id} status to 'started'.")
-                logger.info("Set associated scan status to 'running'.")
+                logger.debug(f"Set scan_job {scan_id} status to 'started'.")
+                logger.debug("Set associated scan status to 'running'.")
     finally:
         conn.close()
 
@@ -89,6 +90,25 @@ def set_finished_db(scan_id: str):
                     """,
                     ("finished", scan_id),
                 )
-                logger.info(f"Set scan_job {scan_id} status to 'finished'.")
+                logger.debug(f"Set scan_job {scan_id} status to 'finished'.")
+    finally:
+        conn.close()
+
+
+def set_enqueued_db(scan_id: str):
+    conn = psycopg2.connect(**DB_CONFIG)
+
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                        UPDATE scan_jobs
+                        SET status = %s
+                        WHERE id = %s
+                    """,
+                    ("enqueued", scan_id),
+                )
+                logger.debug(f"Set scan_job {scan_id} status to 'enqueued'.")
     finally:
         conn.close()

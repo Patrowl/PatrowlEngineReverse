@@ -5,10 +5,11 @@ from base_engine.celery_app import app
 app.conf.task_routes = {"execute_scan": {"queue": "engine-OwlDNS"}}
 
 
-@app.task(name="execute_scan")
-def execute_scan(options_json):
+@app.task(bind=True, acks_late=True, name="execute_scan", max_retries=3)
+def execute_scan(self, options_json):
     try:
+        self.update_state(state="PROGRESS", meta={"current": 2, "total": 6})
         return engine.start(options_json)
     except Exception as e:
         logger.exception("Celery: Error during scan", exc_info=e)
-        raise e
+        raise self.retry(exc=e, countdown=60)
