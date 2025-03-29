@@ -36,4 +36,5 @@ COPY --from=builder /engine /engine
 
 # RUN apk add --no-cache libffi
 
-CMD ["sh", "-c", "celery -A tasks worker --queues=engine-OwlDNS --loglevel=info --concurrency=${CONCURRENCY} --prefetch-multiplier=1"]
+# -P threads may be not the best idea, but it solves https://stackoverflow.com/questions/30624290/celery-daemonic-processes-are-not-allowed-to-have-children
+CMD ["sh", "-c", "celery -A tasks worker -P threads --queues=engine-OwlDNS --loglevel=info --concurrency=${CONCURRENCY} --prefetch-multiplier=1"]
