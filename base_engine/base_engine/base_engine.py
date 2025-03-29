@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 import time
 from base_engine.custom_logger import logger
+from base_engine.utils import push_issues_arsenal, set_started_db, set_finished_db
 
 
 class BaseOptions(BaseModel):
@@ -55,29 +56,42 @@ class Engine(ABC):
         return []
 
     # TODO
-    def _send_to_db(self, data: list):
-        print("send", len(data))
+    def _send_to_arsenal_db(self, data: list):
+        logger.info(f"Sending {len(data)} issues to Arsenal")
+        push_issues_arsenal(data)
+
+    def _send_to_nosql_db(self, data: list):
+        logger.info(f"Sending {len(data)} issues to NoSQL db")
 
     ### START (Never called during unit testing)
 
     def start(self, data):
-        logger.info("Start scan with data", data)
+        logger.info("Start scan with data")
+        logger.info(json.dumps(data))
         options = self.scan_options.model_validate(data)
-        issues_count = 0
+        # Temporary? update status on arsenal
+        set_started_db(options.id)
+        issues = []
 
         batch = []
         batch_size = 50
 
         for result in self._execute_scan(options):
             batch.append(result)
-            issues_count += 1
+            issues.append(result)
             if len(batch) >= batch_size:
-                self._send_to_db(batch)
+                self._send_to_nosql_db(batch)
                 batch.clear()
         if batch:
-            self._send_to_db(batch)
+            self._send_to_nosql_db(batch)
 
-        return issues_count
+        logger.info(f"Scan over. {len(issues)} issues found")
+        # Temporary? update status on arsenal
+        set_finished_db(options.id)
+
+        # Temporary. Send issues also to arsenal
+        self._send_to_arsenal_db(issues)
+        return len(issues)
 
     ### MAIN FUNCTION TO EXECUTE SCANS (Never called during unit testing)
 

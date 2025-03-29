@@ -7,8 +7,5 @@ setup(
     author="Patrowl",
     license="BSD 2-clause",
     packages=["base_engine"],
-    install_requires=[
-        "celery==5.4.0",
-        "pydantic==2.10.6",
-    ],
+    install_requires=["celery==5.4.0", "pydantic==2.10.6", "psycopg2==2.9.10"],
 )
